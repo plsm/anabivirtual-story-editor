@@ -4,6 +4,7 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -113,12 +114,12 @@ public class JDBCDatabase
 				  rs.getString ("name")
 			);
 		};
-		Collection<Location> result = this.toCollection (sql, cr);
-		this.locations = new LinkedHashMap<> (result.size ());
-		for (Location l : result) {
+		Collection<Location> ls = this.toCollection (sql, cr);
+		this.locations = new LinkedHashMap<> (ls.size ());
+		for (Location l : ls) {
 			this.locations.put (l.ID, l);
 		}
-		return result;
+		return this.locations.values ();
 	}
 
 	@Override
@@ -137,6 +138,95 @@ public class JDBCDatabase
 		};
 		return this.toCollection (sql, cr);
 	}
+	//**************************************************************************
+	/**
+	 * Insert a new location in the database using the provided parameters.
+	 * The collection returned by method {@code getLocations()} will hold
+	 * the new location.
+	 * @param latitude The latitude of the new location.
+	 * @param longitude The longitude of the new location.
+	 * @param name The name of the new location.
+	 * @return An instance of {@code Location} representing the new location,
+	 * {@code null} if an error occurred.
+	 */
+	public Location insertLocation (double latitude, double longitude, String name)
+	{
+		try {
+			String sql = "INSERT INTO location (latitude, longitude, name) VALUES (?, ?, ?)";
+			PreparedStatement ps = this.connection.prepareStatement (sql, Statement.RETURN_GENERATED_KEYS);
+			ps.setDouble (1, latitude);
+			ps.setDouble (2, longitude);
+			ps.setString (3, name);
+			ps.executeUpdate ();
+			ResultSet rs = ps.getGeneratedKeys ();
+			rs.next ();
+			long newID = rs.getLong (1);
+			ps.close ();
+			Location insertedLocation = new Location (newID, latitude, longitude, name);
+			this.locations.put (newID, insertedLocation);
+			return insertedLocation;
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error inserting location");
+			System.err.println (ex.getMessage ());
+			ex.printStackTrace (System.err);
+			return null;
+		}
+	}
+	/**
+	 * Removes the given location from the database.
+	 * The given location should be one in the collection returned by method {@code getLocations}.
+	 * @param location The location to be removed.
+	 * @return {@code false} if an error occurred {@code true} otherwise.
+	 * @see #getLocations()
+	 */
+	public boolean removeLocation (Location location)
+	{
+		try {
+			String sql = "DELETE FROM location WHERE ID = ?";
+			PreparedStatement ps = this.connection.prepareStatement (sql);
+			ps.setLong (1, location.ID);
+			System.out.println (ps.toString ());
+			int rowCount = ps.executeUpdate ();
+			ps.close ();
+			System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
+			this.locations.remove (location.ID);
+			return true;
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error removing location");
+			ex.printStackTrace (System.err);
+			return false;
+		}
+	}
+	/**
+	 * Updates the given location in the database.
+	 * The given location should be one in the collection returned by method {@code getLocations}.
+	 * @param location The updated location.
+	 * @return {@code false} if an error occurred {@code true} otherwise.
+	 * @see #getLocations()
+	 */
+	public boolean updateLocation (Location location)
+	{
+		try {
+			String sql = "UPDATE location SET latitude = ?, longitude = ?, name = ? WHERE id = ?";
+			PreparedStatement ps = this.connection.prepareStatement (sql);
+			ps.setDouble (1, location.latitude);
+			ps.setDouble (2, location.longitude);
+			ps.setString (3, location.name);
+			ps.setLong (4, location.ID);
+			int rowCount = ps.executeUpdate ();
+			ps.close ();
+			System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
+			return true;
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error updating location");
+			ex.printStackTrace (System.err);
+			return false;
+		}
+	}
+	//**************************************************************************
 	/**
 	 * Execute a SQL select statement and return the result as a collection of objects.
 	 * If there is an exception, an empty collection is returned.
@@ -155,6 +245,7 @@ public class JDBCDatabase
 			while (rs.next ()) {
 				result.add (cr.getData (rs));
 			}
+			stmt.close ();
 		}
 		catch (SQLException ex) {
 			System.err.println (ex.getMessage ());
