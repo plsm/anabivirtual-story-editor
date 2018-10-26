@@ -1,5 +1,6 @@
 package com.anabivirtual.story.editor;
 
+import com.anabivirtual.story.db.JDBCDatabase;
 import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -13,10 +14,16 @@ public class MainJFrame
 {
 
 	/** Creates new form MainJFrame */
-	public MainJFrame() {
-		initComponents();
+	public MainJFrame ()
+	{
+		initComponents ();
 	}
 
+	private void openDatabaseEditor (File file, JDBCDatabase database)
+	{
+		DatabaseEditorJFrame locationEditor = new DatabaseEditorJFrame (file, database);
+		locationEditor.setVisible (true);
+	}
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -94,7 +101,7 @@ public class MainJFrame
 			               Utilities.getString ("WarningTitle"),
 								JOptionPane.YES_NO_OPTION,
 			               JOptionPane.WARNING_MESSAGE))) {
-				System.out.format ("MISSING: show the database editor for file %s\n", f.getAbsolutePath ());
+				this.openDatabaseEditor (f, JDBCDatabase.createDatabase (f.getAbsolutePath ()));
 			}
 		}
    }//GEN-LAST:event_createDataBaseButtonActionPerformed
@@ -111,7 +118,7 @@ public class MainJFrame
 		if (returnValue == 0) {
 			File f = fc.getSelectedFile ();
 			if (f.exists () && f.isFile ()) {
-				System.out.format ("MISSING: show the database editor for file %s\n", f.getAbsolutePath ());
+				this.openDatabaseEditor (f, JDBCDatabase.editDatabase (f.getAbsolutePath ()));
 			}
 		}
    }//GEN-LAST:event_editDatabaseButtonActionPerformed
