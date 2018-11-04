@@ -1,6 +1,6 @@
 package com.anabivirtual.story.editor;
 
-import com.anabivirtual.story.db.Database;
+import com.anabivirtual.story.db.JDBCDatabase;
 import com.anabivirtual.story.db.Location;
 import java.util.Vector;
 
@@ -12,7 +12,7 @@ import java.util.Vector;
 final public class LocationTableModel
 	  extends javax.swing.table.AbstractTableModel
 {
-	final private Database database;
+	final private JDBCDatabase database;
 	final private Vector<Location> locations;
 
 	enum Column {
@@ -21,7 +21,7 @@ final public class LocationTableModel
 		LONGITUDE,
 		NAME
 	};
-	LocationTableModel (Database database)
+	LocationTableModel (JDBCDatabase database)
 	{
 		this.database = database;
 		this.locations = new Vector<> (database.getLocations ());
@@ -41,26 +41,14 @@ final public class LocationTableModel
 	@Override
 	public Object getValueAt (int rowIndex, int columnIndex)
 	{
-		Location location = this.locations.elementAt (rowIndex);
-		int seconds, minutes, degrees;
-		char side;
+		Location location = this.locations.get (rowIndex);
 		switch (Column.values () [columnIndex]) {
 			case ID:
 				return location.ID;
 			case LATITUDE:
-				seconds = (int) Math.abs (Math.round (location.latitude * 3600));
-				minutes = (seconds / 60) % 60;
-				degrees = seconds / 3600;
-				seconds = seconds % 60;
-				side = location.latitude < 0 ? 'N' : 'S';
-				return String.format ("%2d° %2d' %2d'' %c", degrees, minutes, seconds, side);
+				return location.latitude;
 			case LONGITUDE:
-				seconds = (int) Math.abs (Math.round (location.longitude * 3600));
-				minutes = (seconds / 60) % 60;
-				degrees = seconds / 3600;
-				seconds = seconds % 60;
-				side = location.longitude < 0 ? 'W' : 'E';
-				return String.format ("%2d° %2d' %2d'' %c", degrees, minutes, seconds, side);
+				return location.longitude;
 			case NAME:
 				return location.name;
 		}
@@ -80,6 +68,7 @@ final public class LocationTableModel
 				return Integer.class;
 			case LATITUDE:
 			case LONGITUDE:
+				return Double.class;
 			case NAME:
 				return String.class;
 		}
@@ -103,6 +92,32 @@ final public class LocationTableModel
 	@Override
 	public void setValueAt (Object aValue, int rowIndex, int columnIndex)
 	{
-		throw new UnsupportedOperationException ("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+		Location l = this.locations.get (rowIndex);
+		switch (Column.values () [columnIndex]) {
+			case ID:
+				return ;
+			case LATITUDE:
+				if (l.latitude != (Double) aValue) {
+					l.latitude = (Double) aValue;
+					this.database.updateLocation (l);
+					this.fireTableCellUpdated (rowIndex, columnIndex);
+				}
+				return ;
+			case LONGITUDE:
+				if (l.longitude != (Double) aValue) {
+					l.longitude = (Double) aValue;
+					this.database.updateLocation (l);
+					this.fireTableCellUpdated (rowIndex, columnIndex);
+				}
+				return ;
+			case NAME:
+				if (l.name.compareTo ((String) aValue) != 0) {
+					l.name = (String) aValue;
+					this.database.updateLocation (l);
+					this.fireTableCellUpdated (rowIndex, columnIndex);
+				}
+				return ;
+		}
+		throw new Error ("Not reachable");
 	}
 }

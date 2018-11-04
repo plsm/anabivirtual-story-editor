@@ -16,6 +16,7 @@ import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
+import javax.swing.table.TableColumn;
 
 /**
  * This frame displays components to edit a story database.
@@ -39,6 +40,7 @@ public class DatabaseEditorJFrame
 		this.database = database;
 		this.locationTableModel = new LocationTableModel (database);
 		initComponents ();
+		this.initLocationTable ();
 		this.setTitle (String.format (Utilities.getString ("DatabaseEditorFrameTitle"), file.getAbsolutePath ()));
 		JFXPanel panel = new JFXPanel ();
 		Platform.runLater (new Runnable ()
@@ -54,6 +56,16 @@ public class DatabaseEditorJFrame
 				getContentPane ().add(panel, java.awt.BorderLayout.EAST);
 			}
 		});
+	}
+
+	private void initLocationTable ()
+	{
+		TableColumn latitudeColumn = this.locationsTable.getColumnModel ()
+		  .getColumn (LocationTableModel.Column.LATITUDE.ordinal ());
+		latitudeColumn.setCellRenderer (new LatitudeRenderer ());
+		TableColumn longitudeColumn = this.locationsTable.getColumnModel ()
+		  .getColumn (LocationTableModel.Column.LONGITUDE.ordinal ());
+		longitudeColumn.setCellRenderer (new LongitudeRenderer ());
 	}
 
     /** This method is called from within the constructor to
@@ -146,3 +158,57 @@ public class DatabaseEditorJFrame
 	}
 }
 
+
+/**
+ * A latitude renderer.
+ * Latitudes are displayed in degrees, minutes and seconds.
+ * @author pedro
+ */
+class LatitudeRenderer
+  extends javax.swing.table.DefaultTableCellRenderer
+{
+	public LatitudeRenderer ()
+	{
+		super ();
+	}
+
+	@Override
+	public void setValue (Object value)
+	{
+		double latitude = (Double) value;
+		int seconds = (int) Math.abs (Math.round (latitude * 3600));
+		int minutes = (seconds / 60) % 60;
+		int degrees = seconds / 3600;
+		seconds = seconds % 60;
+		char side = latitude > 0 ? 'N' : 'S';
+		String v = String.format ("%2d° %2d' %2d'' %c", degrees, minutes, seconds, side);
+		this.setText (v);
+	}
+}
+
+/**
+ * A longitude renderer.
+ * Longitudes are displayed in degrees, minutes and seconds.
+ * @author pedro
+ */
+class LongitudeRenderer
+  extends javax.swing.table.DefaultTableCellRenderer
+{
+	public LongitudeRenderer ()
+	{
+		super ();
+	}
+
+	@Override
+	public void setValue (Object value)
+	{
+		double latitude = (Double) value;
+		int seconds = (int) Math.abs (Math.round (latitude * 3600));
+		int minutes = (seconds / 60) % 60;
+		int degrees = seconds / 3600;
+		seconds = seconds % 60;
+		char side = latitude < 0 ? 'W' : 'E';
+		String v = String.format ("%2d° %2d' %2d'' %c", degrees, minutes, seconds, side);
+		this.setText (v);
+	}
+}
