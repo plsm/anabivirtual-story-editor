@@ -93,6 +93,19 @@ public class MainJFrame
 		returnValue = fc.showDialog (this, Utilities.getString ("Select"));
 		if (returnValue == 0) {
 			File f = fc.getSelectedFile ();
+			String filenameCheck = f.getName ();
+			if (!Utilities.isValidAndroidResourceFilename (filenameCheck)) {
+				String filenameGood = Utilities.convertToValidAndroidResourceFilename (filenameCheck);
+				JOptionPane.showMessageDialog (
+				  this,
+				  String.format (
+				    Utilities.getString ("InvalidAndroidResourceFilename"),
+				    filenameCheck, filenameGood),
+				  Utilities.getString ("WarningTitle"),
+				  JOptionPane.WARNING_MESSAGE);
+				f = new File (f.getParentFile (), filenameGood);
+				System.out.println (f);
+			}
 			if (!f.exists ()
 			     || (
 			          f.exists () && f.isFile ()
