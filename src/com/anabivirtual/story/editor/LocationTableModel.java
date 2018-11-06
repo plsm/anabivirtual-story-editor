@@ -2,7 +2,7 @@ package com.anabivirtual.story.editor;
 
 import com.anabivirtual.story.db.JDBCDatabase;
 import com.anabivirtual.story.db.Location;
-import java.util.Vector;
+import java.util.Collection;
 
 /**
  *
@@ -13,7 +13,8 @@ final public class LocationTableModel
 	  extends javax.swing.table.AbstractTableModel
 {
 	final private JDBCDatabase database;
-	final private Vector<Location> locations;
+	final Collection<Location> locations;
+	final private RandomAccessIterator<Location> ci;
 
 	enum Column {
 		ID,
@@ -24,7 +25,8 @@ final public class LocationTableModel
 	LocationTableModel (JDBCDatabase database)
 	{
 		this.database = database;
-		this.locations = new Vector<> (database.getLocations ());
+		this.locations = database.getLocations ();
+		this.ci = new RandomAccessIterator<> (this.locations);
 	}
 	@Override
 	public int getRowCount ()
@@ -41,7 +43,7 @@ final public class LocationTableModel
 	@Override
 	public Object getValueAt (int rowIndex, int columnIndex)
 	{
-		Location location = this.locations.get (rowIndex);
+		Location location = this.getLocation (rowIndex);
 		switch (Column.values () [columnIndex]) {
 			case ID:
 				return location.ID;
@@ -92,7 +94,7 @@ final public class LocationTableModel
 	@Override
 	public void setValueAt (Object aValue, int rowIndex, int columnIndex)
 	{
-		Location l = this.locations.get (rowIndex);
+		Location l = this.getLocation (rowIndex);
 		switch (Column.values () [columnIndex]) {
 			case ID:
 				return ;
@@ -119,5 +121,10 @@ final public class LocationTableModel
 				return ;
 		}
 		throw new Error ("Not reachable");
+	}
+
+	private Location getLocation (int rowIndex)
+	{
+		return this.ci.getValueAt (rowIndex);
 	}
 }
