@@ -22,6 +22,7 @@ public class JDBCDatabase
 {
 	private final Connection connection;
 	private Map<Long, Location> locations;
+	private Map<Long, Story> stories;
 	JDBCDatabase (Connection connection)
 	{
 		this.connection = connection;
@@ -124,6 +125,25 @@ public class JDBCDatabase
 		return this.locations.values ();
 	}
 
+	public Collection<Story> getStories ()
+	{
+		if (this.stories == null) {
+			String sql = "SELECT * FROM story";
+			CursorRecord<Story> cr = (ResultSet rs) -> {
+				return new Story (
+					  rs.getLong ("ID"),
+					  this.locations.get (rs.getLong ("location_ID")),
+					  rs.getString ("title")
+				);
+			};
+			Collection<Story> ss = this.toCollection (sql, cr);
+			this.stories = new LinkedHashMap<> (ss.size ());
+			ss.forEach ((s) -> {
+				this.stories.put (s.ID, s);
+			});
+		}
+		return this.stories.values ();
+	}
 	@Override
 	public Collection<AudioStory> getAudioStories ()
 	{
@@ -224,6 +244,69 @@ public class JDBCDatabase
 		}
 		catch (SQLException ex) {
 			System.err.println ("Error updating location");
+			ex.printStackTrace (System.err);
+			return false;
+		}
+	}
+	//**************************************************************************
+	public Story insertStory (Location location, String title)
+	{
+		try {
+			String sql = "INSERT INTO story (title, type, location_ID) VALUES (?, ?, ?)";
+			PreparedStatement ps = this.connection.prepareStatement (sql, Statement.RETURN_GENERATED_KEYS);
+			ps.setString (1, title);
+			ps.setInt (2, 1);
+			ps.setLong (3, location.ID);
+			ps.executeUpdate ();
+			ResultSet rs = ps.getGeneratedKeys ();
+			rs.next ();
+			long newID = rs.getLong (1);
+			ps.close ();
+			Story insertedStory = new Story (newID, location, title);
+			this.stories.put (newID, insertedStory);
+			return insertedStory;
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error inserting story");
+			System.err.println (ex.getMessage ());
+			ex.printStackTrace (System.err);
+			return null;
+		}
+	}
+	public boolean removeStory (Story story)
+	{
+		try {
+			String sql = "DELETE FROM story WHERE ID = ?";
+			PreparedStatement ps = this.connection.prepareStatement (sql);
+			ps.setLong (1, story.ID);
+			System.out.println (ps.toString ());
+			int rowCount = ps.executeUpdate ();
+			ps.close ();
+			System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
+			this.stories.remove (story.ID);
+			return true;
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error removing story");
+			ex.printStackTrace (System.err);
+			return false;
+		}
+	}
+	public boolean updateStory (Story story)
+	{
+		try {
+			String sql = "UPDATE location SET title = ?, location_ID = ? WHERE id = ?";
+			PreparedStatement ps = this.connection.prepareStatement (sql);
+			ps.setString (1, story.title);
+			ps.setLong (2, story.location.ID);
+			ps.setLong (3, story.ID);
+			int rowCount = ps.executeUpdate ();
+			ps.close ();
+			System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
+			return true;
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error updating story");
 			ex.printStackTrace (System.err);
 			return false;
 		}
