@@ -10,6 +10,7 @@ import com.lynden.gmapsfx.javascript.object.MapOptions;
 import com.lynden.gmapsfx.javascript.object.MapTypeIdEnum;
 import com.lynden.gmapsfx.javascript.object.Marker;
 import com.lynden.gmapsfx.javascript.object.MarkerOptions;
+import java.awt.BorderLayout;
 import java.io.File;
 import java.util.LinkedList;
 import javafx.application.Platform;
@@ -61,7 +62,7 @@ public class DatabaseEditorJFrame
 				BorderPane root = new BorderPane(gmc);
 				Scene scene = new Scene(root);
 				panel.setScene(scene);
-				getContentPane ().add(panel, java.awt.BorderLayout.EAST);
+				mapPanel.add (panel, BorderLayout.CENTER);
 			}
 		});
 	}
@@ -86,17 +87,23 @@ public class DatabaseEditorJFrame
    private void initComponents()
    {
 
-      controlPanel = new javax.swing.JPanel();
+      javax.swing.JSplitPane mainSplitPane = new javax.swing.JSplitPane();
+      javax.swing.JTabbedPane databaseTabbedPane = new javax.swing.JTabbedPane();
+      javax.swing.JPanel locationsPanel = new javax.swing.JPanel();
+      javax.swing.JPanel locationsControlPanel = new javax.swing.JPanel();
       newLocationButton = new javax.swing.JButton();
       deleteLocationButton = new javax.swing.JButton();
       javax.swing.JSeparator jSeparator1 = new javax.swing.JSeparator();
       javax.swing.JLabel dummyLabel = new javax.swing.JLabel();
-      javax.swing.JScrollPane jScrollPane1 = new javax.swing.JScrollPane();
+      javax.swing.JScrollPane locationsScrollPane = new javax.swing.JScrollPane();
       locationsTable = new javax.swing.JTable();
+      mapPanel = new javax.swing.JPanel();
 
       setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-      controlPanel.setLayout(new javax.swing.BoxLayout(controlPanel, javax.swing.BoxLayout.X_AXIS));
+      locationsPanel.setLayout(new java.awt.BorderLayout());
+
+      locationsControlPanel.setLayout(new javax.swing.BoxLayout(locationsControlPanel, javax.swing.BoxLayout.X_AXIS));
 
       newLocationButton.setText(Utilities.getString("NewLocation")); // NOI18N
       newLocationButton.addActionListener(new java.awt.event.ActionListener()
@@ -106,7 +113,7 @@ public class DatabaseEditorJFrame
             newLocationButtonActionPerformed(evt);
          }
       });
-      controlPanel.add(newLocationButton);
+      locationsControlPanel.add(newLocationButton);
 
       deleteLocationButton.setText(Utilities.getString("DeleteLocation")); // NOI18N
       deleteLocationButton.addActionListener(new java.awt.event.ActionListener()
@@ -116,18 +123,28 @@ public class DatabaseEditorJFrame
             deleteLocationButtonActionPerformed(evt);
          }
       });
-      controlPanel.add(deleteLocationButton);
-      controlPanel.add(jSeparator1);
+      locationsControlPanel.add(deleteLocationButton);
+      locationsControlPanel.add(jSeparator1);
 
       dummyLabel.setText("...");
-      controlPanel.add(dummyLabel);
+      locationsControlPanel.add(dummyLabel);
 
-      getContentPane().add(controlPanel, java.awt.BorderLayout.SOUTH);
+      locationsPanel.add(locationsControlPanel, java.awt.BorderLayout.SOUTH);
 
       locationsTable.setModel(this.locationTableModel);
-      jScrollPane1.setViewportView(locationsTable);
+      locationsScrollPane.setViewportView(locationsTable);
 
-      getContentPane().add(jScrollPane1, java.awt.BorderLayout.CENTER);
+      locationsPanel.add(locationsScrollPane, java.awt.BorderLayout.CENTER);
+
+      databaseTabbedPane.addTab(Utilities.getString("Locations"), locationsPanel); // NOI18N
+
+      mainSplitPane.setLeftComponent(databaseTabbedPane);
+
+      mapPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+      mapPanel.setLayout(new java.awt.BorderLayout());
+      mainSplitPane.setRightComponent(mapPanel);
+
+      getContentPane().add(mainSplitPane, java.awt.BorderLayout.CENTER);
 
       pack();
    }// </editor-fold>//GEN-END:initComponents
@@ -149,9 +166,9 @@ public class DatabaseEditorJFrame
    }//GEN-LAST:event_deleteLocationButtonActionPerformed
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
-   private javax.swing.JPanel controlPanel;
    private javax.swing.JButton deleteLocationButton;
    private javax.swing.JTable locationsTable;
+   private javax.swing.JPanel mapPanel;
    private javax.swing.JButton newLocationButton;
    // End of variables declaration//GEN-END:variables
 
