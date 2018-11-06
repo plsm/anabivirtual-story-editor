@@ -29,6 +29,7 @@ public class DatabaseEditorJFrame
 {
 	final JDBCDatabase database;
 	final LocationTableModel locationTableModel;
+	final StoryTableModel storyTableModel;
 	private GoogleMapView gmc;
 	private GoogleMap map;
 	/**
@@ -48,6 +49,7 @@ public class DatabaseEditorJFrame
 	{
 		this.database = database;
 		this.locationTableModel = new LocationTableModel (database);
+		this.storyTableModel = new StoryTableModel (database);
 		initComponents ();
 		this.initLocationTable ();
 		this.setTitle (String.format (Utilities.getString ("DatabaseEditorFrameTitle"), file.getAbsolutePath ()));
@@ -97,6 +99,12 @@ public class DatabaseEditorJFrame
       javax.swing.JLabel dummyLabel = new javax.swing.JLabel();
       javax.swing.JScrollPane locationsScrollPane = new javax.swing.JScrollPane();
       locationsTable = new javax.swing.JTable();
+      javax.swing.JPanel storiesPanel = new javax.swing.JPanel();
+      javax.swing.JScrollPane storiesScrollPane = new javax.swing.JScrollPane();
+      storiesTable = new javax.swing.JTable();
+      javax.swing.JPanel storiesControlPanel = new javax.swing.JPanel();
+      insertStoryButton = new javax.swing.JButton();
+      deleteStoryButton = new javax.swing.JButton();
       mapPanel = new javax.swing.JPanel();
 
       setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -138,6 +146,23 @@ public class DatabaseEditorJFrame
 
       databaseTabbedPane.addTab(Utilities.getString("Locations"), locationsPanel); // NOI18N
 
+      storiesPanel.setLayout(new java.awt.BorderLayout());
+
+      storiesTable.setModel(this.storyTableModel);
+      storiesScrollPane.setViewportView(storiesTable);
+
+      storiesPanel.add(storiesScrollPane, java.awt.BorderLayout.CENTER);
+
+      insertStoryButton.setText(Utilities.getString("InsertStory")); // NOI18N
+      storiesControlPanel.add(insertStoryButton);
+
+      deleteStoryButton.setText(Utilities.getString("DeleteStory")); // NOI18N
+      storiesControlPanel.add(deleteStoryButton);
+
+      storiesPanel.add(storiesControlPanel, java.awt.BorderLayout.SOUTH);
+
+      databaseTabbedPane.addTab(Utilities.getString("Stories"), storiesPanel); // NOI18N
+
       mainSplitPane.setLeftComponent(databaseTabbedPane);
 
       mapPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -167,9 +192,12 @@ public class DatabaseEditorJFrame
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
    private javax.swing.JButton deleteLocationButton;
+   private javax.swing.JButton deleteStoryButton;
+   private javax.swing.JButton insertStoryButton;
    private javax.swing.JTable locationsTable;
    private javax.swing.JPanel mapPanel;
    private javax.swing.JButton newLocationButton;
+   private javax.swing.JTable storiesTable;
    // End of variables declaration//GEN-END:variables
 
 	@Override
