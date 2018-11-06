@@ -31,6 +31,14 @@ public class DatabaseEditorJFrame
 	private GoogleMapView gmc;
 	private GoogleMap map;
 	/**
+	 * Default value of inserted location latitude.
+	 */
+	final private double DEFAULT_LATITUDE = 0;
+	/**
+	 * Default value of inserted location longitude.
+	 */
+	final private double DEFAULT_LONGITUDE = 0;
+	/**
 	 * Creates new form DatabaseEditorJFrame
 	 * @param file
 	 * @param database
@@ -91,6 +99,13 @@ public class DatabaseEditorJFrame
       controlPanel.setLayout(new javax.swing.BoxLayout(controlPanel, javax.swing.BoxLayout.X_AXIS));
 
       newLocationButton.setText(Utilities.getString("NewLocation")); // NOI18N
+      newLocationButton.addActionListener(new java.awt.event.ActionListener()
+      {
+         public void actionPerformed(java.awt.event.ActionEvent evt)
+         {
+            newLocationButtonActionPerformed(evt);
+         }
+      });
       controlPanel.add(newLocationButton);
 
       deleteLocationButton.setText(Utilities.getString("DeleteLocation")); // NOI18N
@@ -109,6 +124,13 @@ public class DatabaseEditorJFrame
 
       pack();
    }// </editor-fold>//GEN-END:initComponents
+
+   private void newLocationButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newLocationButtonActionPerformed
+   {//GEN-HEADEREND:event_newLocationButtonActionPerformed
+		int row = this.database.getLocations ().size ();
+		this.database.insertLocation (DEFAULT_LATITUDE, DEFAULT_LONGITUDE, "");
+		this.locationTableModel.fireTableRowsInserted (row, row);
+   }//GEN-LAST:event_newLocationButtonActionPerformed
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
    private javax.swing.JPanel controlPanel;
