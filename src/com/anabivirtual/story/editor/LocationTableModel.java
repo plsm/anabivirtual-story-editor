@@ -123,7 +123,7 @@ final public class LocationTableModel
 		throw new Error ("Not reachable");
 	}
 
-	private Location getLocation (int rowIndex)
+	Location getLocation (int rowIndex)
 	{
 		return this.ci.getValueAt (rowIndex);
 	}

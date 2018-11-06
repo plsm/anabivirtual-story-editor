@@ -109,6 +109,13 @@ public class DatabaseEditorJFrame
       controlPanel.add(newLocationButton);
 
       deleteLocationButton.setText(Utilities.getString("DeleteLocation")); // NOI18N
+      deleteLocationButton.addActionListener(new java.awt.event.ActionListener()
+      {
+         public void actionPerformed(java.awt.event.ActionEvent evt)
+         {
+            deleteLocationButtonActionPerformed(evt);
+         }
+      });
       controlPanel.add(deleteLocationButton);
       controlPanel.add(jSeparator1);
 
@@ -131,6 +138,15 @@ public class DatabaseEditorJFrame
 		this.database.insertLocation (DEFAULT_LATITUDE, DEFAULT_LONGITUDE, "");
 		this.locationTableModel.fireTableRowsInserted (row, row);
    }//GEN-LAST:event_newLocationButtonActionPerformed
+
+   private void deleteLocationButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deleteLocationButtonActionPerformed
+   {//GEN-HEADEREND:event_deleteLocationButtonActionPerformed
+		int row = this.locationsTable.getSelectedRow ();
+		if (row != -1) {
+			this.database.removeLocation (this.locationTableModel.getLocation (row));
+			this.locationTableModel.fireTableRowsDeleted (row, row);
+		}
+   }//GEN-LAST:event_deleteLocationButtonActionPerformed
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
    private javax.swing.JPanel controlPanel;
