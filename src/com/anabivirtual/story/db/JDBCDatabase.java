@@ -105,6 +105,8 @@ public class JDBCDatabase
 	@Override
 	public Collection<Location> getLocations ()
 	{
+		if (this.locations != null)
+			return this.locations.values ();
 		String sql = "SELECT * FROM location";
 		CursorRecord<Location> cr = (ResultSet rs) -> {
 			return new Location (
