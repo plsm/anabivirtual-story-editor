@@ -5,17 +5,13 @@ package com.anabivirtual.story.db;
  * @author pedro
  */
 public class Location
+  implements com.anabivirtual.story.core.Location
 {
 	public final long ID;
 	public double latitude;
 	public double longitude;
 	public String name;
 
-	public static final String FIELD_ID = "ID";
-	public static final String FIELD_LATITUDE = "latitude";
-	public static final String FIELD_LONGITUDE = "longitude";
-	public static final String FIELD_NAME = "name";
-	
 	public Location (long ID, double latitude, double longitude, String name)
 	{
 		this.ID = ID;
@@ -23,7 +19,49 @@ public class Location
 		this.longitude = longitude;
 		this.name = name;
 	}
-	
+
+	@Override
+	public long getID ()
+	{
+		return ID;
+	}
+
+	@Override
+	public double getLatitude ()
+	{
+		return latitude;
+	}
+
+	@Override
+	public void setLatitude (double latitude)
+	{
+		this.latitude = latitude;
+	}
+
+	@Override
+	public double getLongitude ()
+	{
+		return longitude;
+	}
+
+	@Override
+	public void setLongitude (double longitude)
+	{
+		this.longitude = longitude;
+	}
+
+	@Override
+	public String getName ()
+	{
+		return name;
+	}
+
+	@Override
+	public void setName (String name)
+	{
+		this.name = name;
+	}
+
 	@Override
 	public String toString ()
 	{

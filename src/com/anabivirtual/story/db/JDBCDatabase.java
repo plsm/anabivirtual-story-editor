@@ -298,7 +298,7 @@ public class JDBCDatabase
 			String sql = "UPDATE location SET title = ?, location_ID = ? WHERE id = ?";
 			PreparedStatement ps = this.connection.prepareStatement (sql);
 			ps.setString (1, story.title);
-			ps.setLong (2, story.location.ID);
+			ps.setLong (2, story.location.getID ());
 			ps.setLong (3, story.ID);
 			int rowCount = ps.executeUpdate ();
 			ps.close ();
