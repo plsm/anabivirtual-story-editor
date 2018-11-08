@@ -21,43 +21,43 @@ public class Location
 	}
 
 	@Override
-	public long getID ()
+	final public long getID ()
 	{
 		return ID;
 	}
 
 	@Override
-	public double getLatitude ()
+	final public double getLatitude ()
 	{
 		return latitude;
 	}
 
 	@Override
-	public void setLatitude (double latitude)
+	final public void setLatitude (double latitude)
 	{
 		this.latitude = latitude;
 	}
 
 	@Override
-	public double getLongitude ()
+	final public double getLongitude ()
 	{
 		return longitude;
 	}
 
 	@Override
-	public void setLongitude (double longitude)
+	final public void setLongitude (double longitude)
 	{
 		this.longitude = longitude;
 	}
 
 	@Override
-	public String getName ()
+	final public String getName ()
 	{
 		return name;
 	}
 
 	@Override
-	public void setName (String name)
+	final public void setName (String name)
 	{
 		this.name = name;
 	}

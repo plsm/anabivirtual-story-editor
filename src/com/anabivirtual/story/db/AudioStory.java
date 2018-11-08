@@ -4,7 +4,7 @@ package com.anabivirtual.story.db;
  *
  * @author pedro
  */
-final public class AudioStory
+public class AudioStory
   extends AbstractStory
   implements com.anabivirtual.story.core.AudioStory
 {
@@ -21,13 +21,13 @@ final public class AudioStory
 	}
 
 	@Override
-	public String getFilename ()
+	final public String getFilename ()
 	{
 		return this.filename;
 	}
 
 	@Override
-	public void setFilename (String filename)
+	final public void setFilename (String filename)
 	{
 		this.filename = filename;
 	}

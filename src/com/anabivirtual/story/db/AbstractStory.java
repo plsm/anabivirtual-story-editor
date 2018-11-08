@@ -18,31 +18,31 @@ abstract public class AbstractStory
 	}
 
 	@Override
-	public long getID ()
+	final public long getID ()
 	{
 		return this.ID;
 	}
 
 	@Override
-	public String getTitle ()
+	final public String getTitle ()
 	{
 		return this.title;
 	}
 
 	@Override
-	public void setTitle (String title)
+	final public void setTitle (String title)
 	{
 		this.title = title;
 	}
 
 	@Override
-	public com.anabivirtual.story.core.Location getLocation ()
+	final public com.anabivirtual.story.core.Location getLocation ()
 	{
 		return this.location;
 	}
 
 	@Override
-	public void setLocation (com.anabivirtual.story.core.Location location)
+	final public void setLocation (com.anabivirtual.story.core.Location location)
 	{
 		this.location = location;
 	}
