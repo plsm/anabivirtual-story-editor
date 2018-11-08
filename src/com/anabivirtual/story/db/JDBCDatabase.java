@@ -1,6 +1,10 @@
 package com.anabivirtual.story.db;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -11,6 +15,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
  
 /**
@@ -40,46 +45,11 @@ public class JDBCDatabase
 			System.out.println ("The driver name is " + meta.getDriverName ());
 			System.out.println ("A new database has been created.");
 			// SQLite connection string
-			Statement stmt = conn.createStatement ();
-			stmt.execute ("CREATE TABLE location (\n" +
-"  ID INTEGER PRIMARY KEY ASC NOT NULL,\n" +
-"  latitude REAL NOT NULL,\n" +
-"  longitude REAL NOT NULL,\n" +
-"  name TEXT NOT NULL\n" +
-"  )");
-			stmt.execute ("CREATE TABLE story (\n" +
-"  ID INTEGER PRIMARY KEY ASC NOT NULL,\n" +
-"  title TEXT NOT NULL,\n" +
-"  type INT NOT NULL,\n" +
-"  location_ID INT NOT NULL,\n" +
-"  FOREIGN KEY (location_ID) REFERENCES location (ID) ON DELETE CASCADE\n" +
-")");
-			stmt.execute ("CREATE TABLE audio (\n" +
-"  story_ID INTEGER NOT NULL,\n" +
-"  filename TEXT NOT NULL,\n" +
-"  FOREIGN KEY (story_ID) REFERENCES story (ID) ON DELETE CASCADE\n" +
-")");
-			stmt.execute ("CREATE INDEX location_index\n" +
-"  ON location (latitude, longitude)");
-			stmt.execute ("CREATE VIEW audio_story (\n" +
-"  location_ID,\n" +
-"  story_ID,\n" +
-"  latitude,\n" +
-"  longitude,\n" +
-"  name,\n" +
-"  title,\n" +
-"  filename\n" +
-") AS SELECT\n" +
-"  location.ID,\n" +
-"  story.ID,\n" +
-"  location.latitude,\n" +
-"  location.longitude,\n" +
-"  location.name,\n" +
-"  story.title,\n" +
-"  audio.filename\n" +
-"  FROM location\n" +
-"  INNER JOIN story ON location.ID = story.location_ID\n" +
-"  INNER JOIN audio ON story.ID = audio.story_ID");
+			for (String createTable : readCreateDatabaseResource ()) {
+				Statement stmt = conn.createStatement ();
+				stmt.execute (createTable);
+				stmt.close ();
+			}
 			return new JDBCDatabase (conn);
 		}
 		catch (SQLException ex) {
@@ -88,6 +58,44 @@ public class JDBCDatabase
 		}
 	}
 
+	/**
+	 * Read the create-database.sql resource that contains the SQL data
+	 * definition commands.
+	 *
+	 * @return A collection of strings where each string corresponds
+	 * to a command from the DDL.
+	 */
+	static private Collection<String> readCreateDatabaseResource ()
+	{
+		Collection<String> result = new LinkedList<> ();
+		StringBuilder createStatement = new StringBuilder ();
+		Object o = new Object ();
+		InputStream is = o.getClass ().getResourceAsStream ("/com/anabivirtual/story/db/sql/create-database.sql");
+		BufferedReader br = new BufferedReader (new InputStreamReader (is));
+		boolean eof = false;
+		do {
+			try {
+				String line = br.readLine ();
+				if (line == null) {
+					result.add (createStatement.toString ());
+					eof = true;
+				}
+				else if (line.isEmpty ()) {
+					result.add (createStatement.toString ());
+					createStatement = new StringBuilder ();
+				}
+				else {
+					createStatement.append (line);
+				}
+			}
+			catch (IOException ex) {
+				System.err.println ("Error reading create-database.sql resource");
+				ex.printStackTrace ();
+				System.exit (1);
+			}
+		} while (!eof);
+		return result;
+	}
 	static public JDBCDatabase editDatabase (String filename)
 	{
 		try {
