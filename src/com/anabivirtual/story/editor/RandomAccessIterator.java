@@ -44,8 +44,14 @@ class RandomAccessIterator<T>
 	{
 		this.collection = collection;
 		this.iterator = collection.iterator ();
-		this.last_value = this.iterator.next ();
-		this.last_index = 0;
+		if (this.iterator.hasNext ()) {
+			this.last_value = this.iterator.next ();
+			this.last_index = 0;
+		}
+		else {
+			this.last_value = null;
+			this.last_index = -1;
+		}
 	}
 	public T getValueAt (final int index)
 	{
