@@ -61,7 +61,15 @@ class RandomAccessIterator<T>
 			this.last_index = 0;
 		}
 		while (index > this.last_index) {
-			this.last_value = this.iterator.next ();
+			try {
+				this.last_value = this.iterator.next ();
+			}
+			catch (java.util.ConcurrentModificationException ex) {
+				this.iterator = this.collection.iterator ();
+				this.last_value = this.iterator.next ();
+				this.last_index = 0;
+				return this.getValueAt (index);
+			}
 			this.last_index++;
 		}
 		return this.last_value;
