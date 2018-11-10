@@ -37,6 +37,7 @@ public class DatabaseEditorJFrame
 	final JDBCDatabase database;
 	final LocationTableModel locationTableModel;
 	final StoryTableModel storyTableModel;
+	final AudioStoryTableModel audioStoryTableModel;
 	private GoogleMapView gmc;
 	private GoogleMap map;
 	/**
@@ -57,6 +58,7 @@ public class DatabaseEditorJFrame
 		this.database = database;
 		this.locationTableModel = new LocationTableModel (database);
 		this.storyTableModel = new StoryTableModel (database);
+		this.audioStoryTableModel = new AudioStoryTableModel (database);
 		initComponents ();
 		this.initLocationTable ();
 		this.initStoryTable ();
@@ -124,6 +126,12 @@ public class DatabaseEditorJFrame
       javax.swing.JPanel storiesControlPanel = new javax.swing.JPanel();
       insertStoryButton = new javax.swing.JButton();
       deleteStoryButton = new javax.swing.JButton();
+      javax.swing.JPanel audioStoriesPanel = new javax.swing.JPanel();
+      javax.swing.JScrollPane audioStoriesScrollPane = new javax.swing.JScrollPane();
+      audioStoriesTable = new javax.swing.JTable();
+      javax.swing.JPanel audioStoriesControlPanel = new javax.swing.JPanel();
+      javax.swing.JButton insertAudioStoryButton = new javax.swing.JButton();
+      javax.swing.JButton deleteAudioStoryButton = new javax.swing.JButton();
       mapPanel = new javax.swing.JPanel();
 
       setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -182,6 +190,23 @@ public class DatabaseEditorJFrame
 
       databaseTabbedPane.addTab(Utilities.getString("Stories"), storiesPanel); // NOI18N
 
+      audioStoriesPanel.setLayout(new java.awt.BorderLayout());
+
+      audioStoriesTable.setModel(this.audioStoryTableModel);
+      audioStoriesScrollPane.setViewportView(audioStoriesTable);
+
+      audioStoriesPanel.add(audioStoriesScrollPane, java.awt.BorderLayout.CENTER);
+
+      insertAudioStoryButton.setText(Utilities.getString("Insert")); // NOI18N
+      audioStoriesControlPanel.add(insertAudioStoryButton);
+
+      deleteAudioStoryButton.setText(Utilities.getString("Delete")); // NOI18N
+      audioStoriesControlPanel.add(deleteAudioStoryButton);
+
+      audioStoriesPanel.add(audioStoriesControlPanel, java.awt.BorderLayout.SOUTH);
+
+      databaseTabbedPane.addTab(Utilities.getString("AudioStories"), audioStoriesPanel); // NOI18N
+
       mainSplitPane.setLeftComponent(databaseTabbedPane);
 
       mapPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -210,6 +235,7 @@ public class DatabaseEditorJFrame
    }//GEN-LAST:event_deleteLocationButtonActionPerformed
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
+   private javax.swing.JTable audioStoriesTable;
    private javax.swing.JButton deleteLocationButton;
    private javax.swing.JButton deleteStoryButton;
    private javax.swing.JButton insertStoryButton;

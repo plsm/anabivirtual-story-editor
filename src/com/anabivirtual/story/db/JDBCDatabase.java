@@ -320,6 +320,35 @@ public class JDBCDatabase
 		}
 	}
 	//**************************************************************************
+	public boolean updateAudioStory (AudioStory story)
+	{
+		String sql;
+		PreparedStatement ps;
+		int rowCount;
+		try {
+			sql = "UPDATE story SET title = ?, location_ID = ? WHERE id = ?";
+			ps = this.connection.prepareStatement (sql);
+			ps.setString (1, story.title);
+			ps.setLong (2, story.location.getID ());
+			ps.setLong (3, story.ID);
+			rowCount = ps.executeUpdate ();
+			ps.close ();
+			sql = "UPDATE audio SET filename = ? WHERE story_ID = ?";
+			ps = this.connection.prepareStatement (sql);
+			ps.setString (1, story.filename);
+			ps.setLong (2, story.ID);
+			rowCount += ps.executeUpdate ();
+			ps.close ();
+			System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
+			return true;
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error updating audio story");
+			ex.printStackTrace (System.err);
+			return false;
+		}
+	}
+	//**************************************************************************
 	/**
 	 * Execute a SQL select statement and return the result as a collection of objects.
 	 * If there is an exception, an empty collection is returned.

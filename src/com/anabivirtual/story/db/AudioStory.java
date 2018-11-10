@@ -8,7 +8,7 @@ public class AudioStory
   extends AbstractStory
   implements com.anabivirtual.story.core.AudioStory<Location>
 {
-	String filename;
+	public String filename;
 	public AudioStory (long ID, Location location, String title, String filename)
 	{
 		super (ID, location, title);
