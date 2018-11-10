@@ -28,6 +28,7 @@ public class JDBCDatabase
 	private final Connection connection;
 	private Map<Long, Location> locations;
 	private Map<Long, Story> stories;
+	private Map<Long, AudioStory> audios;
 	JDBCDatabase (Connection connection)
 	{
 		this.connection = connection;
@@ -157,16 +158,30 @@ public class JDBCDatabase
 	{
 		if (this.locations == null)
 			this.getLocations ();
-		String sql = "SELECT * FROM audio_story";
-		CursorRecord<AudioStory> cr = (ResultSet rs) -> {
-			return new AudioStory (
-				  rs.getLong ("story_ID"),
-				  this.locations.get (rs.getLong ("location_ID")),
-				  rs.getString ("title"),
-				  rs.getString ("filename")
-			);
-		};
-		return this.toCollection (sql, cr);
+		if (this.audios == null) {
+			CursorToRecord<AudioStory> cr = new CursorToRecord<AudioStory> ()
+			{
+				@Override
+				public AudioStory getData (ResultSet rs) throws SQLException
+				{
+					return new AudioStory (
+						  rs.getLong ("story_ID"),
+						  locations.get (rs.getLong ("location_ID")),
+						  rs.getString ("title"),
+						  rs.getString ("filename")
+					);
+				}
+
+				@Override
+				public long getKey (ResultSet rs) throws SQLException
+				{
+					return rs.getLong ("location_ID");
+				}
+			};
+			String sql = "SELECT * FROM audio_story";
+			this.audios = toMap (sql, cr);
+		}
+		return this.audios.values ();
 	}
 	//**************************************************************************
 	/**
@@ -320,6 +335,31 @@ public class JDBCDatabase
 		}
 	}
 	//**************************************************************************
+	public AudioStory insertAudioStory (Location location, String title, String filename)
+	{
+		Story story = insertStory (location, title);
+		if (story == null)
+			return null;
+		try {
+			String sql = "INSERT INTO audio (story_ID, filename) VALUES (?, ?)";
+			PreparedStatement ps = this.connection.prepareStatement (sql);
+			ps.setLong (1, story.ID);
+			ps.setString (2, filename);
+			ps.executeUpdate ();
+			ResultSet rs = ps.getGeneratedKeys ();
+			rs.next ();
+			ps.close ();
+			AudioStory insertedStory = new AudioStory (story.ID, location, title, filename);
+			this.audios.put (story.ID, insertedStory);
+			return insertedStory;
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error inserting audio");
+			System.err.println (ex.getMessage ());
+			ex.printStackTrace (System.err);
+			return null;
+		}
+	}
 	public boolean updateAudioStory (AudioStory story)
 	{
 		String sql;
@@ -390,6 +430,56 @@ public class JDBCDatabase
 		 * @throws SQLException 
 		 */
 		public T getData (ResultSet cursor) throws SQLException;
+	}
+	/**
+	 * Execute a SQL select statement and return the result as a collection of objects.
+	 * If there is an exception, an empty collection is returned.
+	 *
+	 * @param <T> The type that represents the rows of the result.
+	 * @param selectSql The SQL select statement.
+	 * @param cr An object that converts a row to a Java object.
+	 * @return A collection of objects representing the result of the SQL select.
+	 */
+	private <T> Map<Long, T> toMap (String selectSql, CursorToRecord<T> cr)
+	{
+		Map<Long, T> result = new LinkedHashMap<> ();
+		try {
+			Statement stmt = this.connection.createStatement ();
+			ResultSet rs = stmt.executeQuery (selectSql);
+			while (rs.next ()) {
+				result.put (cr.getKey (rs), cr.getData (rs));
+			}
+			stmt.close ();
+		}
+		catch (SQLException ex) {
+			System.err.println (ex.getMessage ());
+		}
+		return result;
+	}
+	/**
+	 * An interface that maps the current row in a result set to a Java object.
+	 * This interface is used by the {@code toMap} method to convert a result set
+	 * to a Java collection.
+	 *
+	 * @param <T> The type of the object that represents the rows in the result
+	 * set.
+	 * @see #toMap(java.lang.String, com.anabivirtual.story.db.JDBCDatabase.CursorToRecord)
+	 */
+	private interface CursorToRecord<T> {
+		/**
+		 * Convert the current row to a Java object.
+		 * @param cursor The result set holding the cursor to the current row.
+		 * @return A Java object representing the current row.
+		 * @throws SQLException
+		 */
+		public T getData (ResultSet cursor) throws SQLException;
+		/**
+		 * Get the key of the current row.
+		 * @param cursor The result set holding the cursor to the current row.
+		 * @return the key of the current row.
+		 * @throws SQLException
+		 */
+		public long getKey (ResultSet cursor) throws SQLException;
 	}
 }
 

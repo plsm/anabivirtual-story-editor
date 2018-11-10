@@ -13,6 +13,7 @@ import com.lynden.gmapsfx.javascript.object.MarkerOptions;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.io.File;
+import java.util.Collection;
 import java.util.LinkedList;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -231,6 +232,13 @@ public class DatabaseEditorJFrame
       audioStoriesPanel.add(audioStoriesScrollPane, java.awt.BorderLayout.CENTER);
 
       insertAudioStoryButton.setText(Utilities.getString("Insert")); // NOI18N
+      insertAudioStoryButton.addActionListener(new java.awt.event.ActionListener()
+      {
+         public void actionPerformed(java.awt.event.ActionEvent evt)
+         {
+            insertAudioStoryButtonActionPerformed(evt);
+         }
+      });
       audioStoriesControlPanel.add(insertAudioStoryButton);
 
       deleteAudioStoryButton.setText(Utilities.getString("Delete")); // NOI18N
@@ -266,6 +274,16 @@ public class DatabaseEditorJFrame
 			this.locationTableModel.fireTableRowsDeleted (row, row);
 		}
    }//GEN-LAST:event_deleteLocationButtonActionPerformed
+
+   private void insertAudioStoryButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_insertAudioStoryButtonActionPerformed
+   {//GEN-HEADEREND:event_insertAudioStoryButtonActionPerformed
+		Collection<Location> ls = this.database.getLocations ();
+		Location l = ls.iterator ().next ();
+		this.database.insertAudioStory (l, "new title", "file.mp3");
+		this.storyTableModel.fireTableDataChanged ();
+		int row = ls.size ();
+		this.audioStoryTableModel.fireTableRowsInserted (row, row);
+   }//GEN-LAST:event_insertAudioStoryButtonActionPerformed
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
    private javax.swing.JTable audioStoriesTable;
