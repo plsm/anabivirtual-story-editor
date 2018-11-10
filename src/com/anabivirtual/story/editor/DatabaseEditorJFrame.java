@@ -11,12 +11,19 @@ import com.lynden.gmapsfx.javascript.object.MapTypeIdEnum;
 import com.lynden.gmapsfx.javascript.object.Marker;
 import com.lynden.gmapsfx.javascript.object.MarkerOptions;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.io.File;
 import java.util.LinkedList;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
+import javax.swing.DefaultCellEditor;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JComboBox;
+import javax.swing.JList;
+import javax.swing.ListCellRenderer;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 
 /**
@@ -52,6 +59,7 @@ public class DatabaseEditorJFrame
 		this.storyTableModel = new StoryTableModel (database);
 		initComponents ();
 		this.initLocationTable ();
+		this.initStoryTable ();
 		this.setTitle (String.format (Utilities.getString ("DatabaseEditorFrameTitle"), file.getAbsolutePath ()));
 		JFXPanel panel = new JFXPanel ();
 		Platform.runLater (new Runnable ()
@@ -77,6 +85,17 @@ public class DatabaseEditorJFrame
 		TableColumn longitudeColumn = this.locationsTable.getColumnModel ()
 		  .getColumn (LocationTableModel.Column.LONGITUDE.ordinal ());
 		longitudeColumn.setCellRenderer (new LongitudeRenderer ());
+	}
+
+	private void initStoryTable ()
+	{
+		TableColumn locationColumn = this.storiesTable.getColumnModel ()
+		  .getColumn (StoryTableModel.Column.LOCATION.ordinal ());
+		JComboBox combox = new JComboBox (new LocationComboBoxModel (this.database));
+		combox.setEditable (false);
+		combox.setRenderer (new LocationInComboboxRenderer ());
+		locationColumn.setCellEditor (new DefaultCellEditor (combox));
+		locationColumn.setCellRenderer (new LocationInTableRenderer ());
 	}
 
     /** This method is called from within the constructor to
@@ -293,5 +312,29 @@ class LongitudeRenderer
 		char side = latitude < 0 ? 'W' : 'E';
 		String v = String.format ("%2d° %2d' %2d'' %c", degrees, minutes, seconds, side);
 		this.setText (v);
+	}
+}
+
+class LocationInComboboxRenderer
+  extends DefaultListCellRenderer
+  implements
+  ListCellRenderer<Object>
+{
+	@Override
+	public Component getListCellRendererComponent (JList list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+	{
+		Location l = (Location) value;
+		return super.getListCellRendererComponent (list, l.name, index, isSelected, cellHasFocus);
+	}
+}
+
+class LocationInTableRenderer
+  extends DefaultTableCellRenderer
+{
+	@Override
+	public void setValue (Object value)
+	{
+		Location l = (Location) value;
+		this.setText (l.name);
 	}
 }
