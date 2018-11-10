@@ -18,6 +18,7 @@ import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
+import javax.swing.ComboBoxModel;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JComboBox;
@@ -62,6 +63,7 @@ public class DatabaseEditorJFrame
 		initComponents ();
 		this.initLocationTable ();
 		this.initStoryTable ();
+		this.initAudioStoryTable ();
 		this.setTitle (String.format (Utilities.getString ("DatabaseEditorFrameTitle"), file.getAbsolutePath ()));
 		JFXPanel panel = new JFXPanel ();
 		Platform.runLater (new Runnable ()
@@ -98,6 +100,37 @@ public class DatabaseEditorJFrame
 		combox.setRenderer (new LocationInComboboxRenderer ());
 		locationColumn.setCellEditor (new DefaultCellEditor (combox));
 		locationColumn.setCellRenderer (new LocationInTableRenderer ());
+	}
+	/**
+	 * Initialise the audio story table to use a combo box to select locations,
+	 * display location's name, and an editor to verify audio filenames.
+	 */
+	private void initAudioStoryTable ()
+	{
+		TableColumn locationColumn = this.audioStoriesTable.getColumnModel ()
+		  .getColumn (AudioStoryTableModel.Column.LOCATION.ordinal ());
+		this.initLocationColumn (locationColumn);
+		TableColumn filenameColumn = this.audioStoriesTable.getColumnModel ()
+		  .getColumn (AudioStoryTableModel.Column.FILENAME.ordinal ());
+		filenameColumn.setCellEditor (new AndroidResourceEditor (this.audioStoriesTable));
+	}
+
+	/**
+	 * Initialise the location column in a table in order to use a combo box to
+	 * display available options and a renderer that shows location's name.
+	 *
+	 * @param locationColumn
+	 * @return The combo box model used by the combo box to select locations.
+	 */
+	private ComboBoxModel initLocationColumn (TableColumn locationColumn)
+	{
+		ComboBoxModel model = new LocationComboBoxModel (this.database);
+		JComboBox combox = new JComboBox (model);
+		combox.setEditable (false);
+		combox.setRenderer (new LocationInComboboxRenderer ());
+		locationColumn.setCellEditor (new DefaultCellEditor (combox));
+		locationColumn.setCellRenderer (new LocationInTableRenderer ());
+		return model;
 	}
 
     /** This method is called from within the constructor to

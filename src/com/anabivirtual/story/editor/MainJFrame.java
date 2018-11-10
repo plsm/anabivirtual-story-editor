@@ -99,7 +99,7 @@ public class MainJFrame
 				JOptionPane.showMessageDialog (
 				  this,
 				  String.format (
-				    Utilities.getString ("InvalidAndroidResourceFilename"),
+				    Utilities.getString ("InvalidAndroidResourceFilenameUsingInstead"),
 				    filenameCheck, filenameGood),
 				  Utilities.getString ("WarningTitle"),
 				  JOptionPane.WARNING_MESSAGE);
