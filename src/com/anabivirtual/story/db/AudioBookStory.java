@@ -8,7 +8,7 @@ package com.anabivirtual.story.db;
  */
 public class AudioBookStory
   extends AudioStory
-  implements com.anabivirtual.story.core.AudioBookStory
+  implements com.anabivirtual.story.core.AudioBookStory<Location>
 {
 	String transcription;
 

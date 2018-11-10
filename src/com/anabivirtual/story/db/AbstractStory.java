@@ -5,10 +5,10 @@ package com.anabivirtual.story.db;
  * @author pedro
  */
 abstract public class AbstractStory
-  implements com.anabivirtual.story.core.Story
+  implements com.anabivirtual.story.core.Story<Location>
 {
 	public final long ID;
-	public com.anabivirtual.story.core.Location location;
+	public Location location;
 	public String title;
 	protected AbstractStory (long ID, Location location, String title)
 	{
@@ -36,13 +36,13 @@ abstract public class AbstractStory
 	}
 
 	@Override
-	final public com.anabivirtual.story.core.Location getLocation ()
+	final public Location getLocation ()
 	{
 		return this.location;
 	}
 
 	@Override
-	final public void setLocation (com.anabivirtual.story.core.Location location)
+	final public void setLocation (Location location)
 	{
 		this.location = location;
 	}

@@ -6,7 +6,7 @@ package com.anabivirtual.story.db;
  */
 public class AudioStory
   extends AbstractStory
-  implements com.anabivirtual.story.core.AudioStory
+  implements com.anabivirtual.story.core.AudioStory<Location>
 {
 	String filename;
 	public AudioStory (long ID, Location location, String title, String filename)
