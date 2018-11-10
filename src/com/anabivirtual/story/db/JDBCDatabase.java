@@ -303,7 +303,7 @@ public class JDBCDatabase
 	public boolean updateStory (Story story)
 	{
 		try {
-			String sql = "UPDATE location SET title = ?, location_ID = ? WHERE id = ?";
+			String sql = "UPDATE story SET title = ?, location_ID = ? WHERE id = ?";
 			PreparedStatement ps = this.connection.prepareStatement (sql);
 			ps.setString (1, story.title);
 			ps.setLong (2, story.location.getID ());
