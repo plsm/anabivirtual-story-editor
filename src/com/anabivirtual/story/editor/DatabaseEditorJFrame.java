@@ -1,5 +1,6 @@
 package com.anabivirtual.story.editor;
 
+import com.anabivirtual.story.db.AudioStory;
 import com.anabivirtual.story.db.JDBCDatabase;
 import com.anabivirtual.story.db.Location;
 import com.lynden.gmapsfx.GoogleMapView;
@@ -242,6 +243,13 @@ public class DatabaseEditorJFrame
       audioStoriesControlPanel.add(insertAudioStoryButton);
 
       deleteAudioStoryButton.setText(Utilities.getString("Delete")); // NOI18N
+      deleteAudioStoryButton.addActionListener(new java.awt.event.ActionListener()
+      {
+         public void actionPerformed(java.awt.event.ActionEvent evt)
+         {
+            deleteAudioStoryButtonActionPerformed(evt);
+         }
+      });
       audioStoriesControlPanel.add(deleteAudioStoryButton);
 
       audioStoriesPanel.add(audioStoriesControlPanel, java.awt.BorderLayout.SOUTH);
@@ -284,6 +292,17 @@ public class DatabaseEditorJFrame
 		int row = ls.size ();
 		this.audioStoryTableModel.fireTableRowsInserted (row, row);
    }//GEN-LAST:event_insertAudioStoryButtonActionPerformed
+
+   private void deleteAudioStoryButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deleteAudioStoryButtonActionPerformed
+   {//GEN-HEADEREND:event_deleteAudioStoryButtonActionPerformed
+		int row = this.audioStoriesTable.getSelectedRow ();
+		if (row != -1) {
+			AudioStory as = this.audioStoryTableModel.getAudioStory (row);
+			this.database.deleteAudioStory (as);
+			this.audioStoryTableModel.fireTableRowsDeleted (row, row);
+			this.storyTableModel.fireTableDataChanged ();
+		}
+   }//GEN-LAST:event_deleteAudioStoryButtonActionPerformed
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
    private javax.swing.JTable audioStoriesTable;

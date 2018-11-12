@@ -126,4 +126,9 @@ public class AudioStoryTableModel
 		}
 		throw new Error ("Not reachable");
 	}
+
+	AudioStory getAudioStory (int index)
+	{
+		return this.rai.getValueAt (index);
+	}
 }
