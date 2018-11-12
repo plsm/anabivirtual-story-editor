@@ -22,16 +22,18 @@ import java.util.Map;
  *
  * @author pedro
  */
-public class JDBCDatabase
-	  implements Database
+final public class JDBCDatabase
 {
 	private final Connection connection;
-	private Map<Long, Location> locations;
-	private Map<Long, Story> stories;
-	private Map<Long, AudioStory> audios;
+	private final Map<Long, Location> locations;
+	private final Map<Long, AudioStory> audios;
+	private final Map<Long, AudioBookStory> audioBooks;
 	JDBCDatabase (Connection connection)
 	{
 		this.connection = connection;
+		this.locations = this.readLocations ();
+		this.audios = this.readAudioStories ();
+		this.audioBooks = this.readAudioBookStories ();
 	}
 
 	static public JDBCDatabase createDatabase (String fileName)
@@ -91,7 +93,7 @@ public class JDBCDatabase
 			}
 			catch (IOException ex) {
 				System.err.println ("Error reading create-database.sql resource");
-				ex.printStackTrace ();
+				ex.printStackTrace (System.err);
 				System.exit (1);
 			}
 		} while (!eof);
@@ -112,76 +114,96 @@ public class JDBCDatabase
 			return null;
 		}
 	}
-	@Override
-	public Collection<Location> getLocations ()
+	private Map<Long, Location> readLocations ()
 	{
-		if (this.locations != null)
-			return this.locations.values ();
 		String sql = "SELECT * FROM location";
-		CursorRecord<Location> cr = (ResultSet rs) -> {
-			return new Location (
+		CursorToRecord<Location> c2r = new CursorToRecord<Location> ()
+		{
+			@Override
+			public Location getData (ResultSet rs) throws SQLException
+			{
+				return new Location (
 				  rs.getLong ("ID"),
 				  rs.getDouble ("latitude"),
 				  rs.getDouble ("longitude"),
 				  rs.getString ("name")
-			);
+				);
+			}
+
+			@Override
+			public long getKey (ResultSet rs) throws SQLException
+			{
+				return rs.getLong ("ID");
+			}
 		};
-		Collection<Location> ls = this.toCollection (sql, cr);
-		this.locations = new LinkedHashMap<> (ls.size ());
-		for (Location l : ls) {
-			this.locations.put (l.ID, l);
-		}
+		return toMap (sql, c2r);
+	}
+	private Map<Long, AudioStory> readAudioStories ()
+	{
+		String sql = "SELECT * FROM audio_story";
+		CursorToRecord<AudioStory> cr = new CursorToRecord<AudioStory> ()
+		{
+			@Override
+			public AudioStory getData (ResultSet rs) throws SQLException
+			{
+				return new AudioStory (
+				  rs.getLong ("story_ID"),
+				  locations.get (rs.getLong ("location_ID")),
+				  rs.getString ("title"),
+				  rs.getString ("filename")
+				);
+			}
+
+			@Override
+			public long getKey (ResultSet rs) throws SQLException
+			{
+				return rs.getLong ("location_ID");
+			}
+		};
+		return toMap (sql, cr);
+	}
+	/**
+	 * Read the view {@code audio_book} and return a map containing
+	 * {@code AudioBookStory} instances.
+	 *
+	 * @return a map containing {@code AudioBookStory} instances.
+	 */
+	private Map<Long, AudioBookStory> readAudioBookStories ()
+	{
+		String sql = "SELECT * FROM audio_book";
+		CursorToRecord<AudioBookStory> cr = new CursorToRecord<AudioBookStory> ()
+		{
+			@Override
+			public AudioBookStory getData (ResultSet rs) throws SQLException
+			{
+				return new AudioBookStory (
+				  rs.getLong ("story_ID"),
+				  locations.get (rs.getLong ("location_ID")),
+				  rs.getString ("title"),
+				  rs.getString ("filename"),
+				  rs.getString ("transcription")
+				);
+			}
+
+			@Override
+			public long getKey (ResultSet rs) throws SQLException
+			{
+				return rs.getLong ("location_ID");
+			}
+		};
+		return toMap (sql, cr);
+	}
+	public Collection<Location> getLocations ()
+	{
 		return this.locations.values ();
 	}
-
-	public Collection<Story> getStories ()
-	{
-		if (this.stories == null) {
-			String sql = "SELECT * FROM story";
-			CursorRecord<Story> cr = (ResultSet rs) -> {
-				return new Story (
-					  rs.getLong ("ID"),
-					  this.locations.get (rs.getLong ("location_ID")),
-					  rs.getString ("title")
-				);
-			};
-			Collection<Story> ss = this.toCollection (sql, cr);
-			this.stories = new LinkedHashMap<> (ss.size ());
-			ss.forEach ((s) -> {
-				this.stories.put (s.ID, s);
-			});
-		}
-		return this.stories.values ();
-	}
-	@Override
 	public Collection<AudioStory> getAudioStories ()
 	{
-		if (this.locations == null)
-			this.getLocations ();
-		if (this.audios == null) {
-			CursorToRecord<AudioStory> cr = new CursorToRecord<AudioStory> ()
-			{
-				@Override
-				public AudioStory getData (ResultSet rs) throws SQLException
-				{
-					return new AudioStory (
-						  rs.getLong ("story_ID"),
-						  locations.get (rs.getLong ("location_ID")),
-						  rs.getString ("title"),
-						  rs.getString ("filename")
-					);
-				}
-
-				@Override
-				public long getKey (ResultSet rs) throws SQLException
-				{
-					return rs.getLong ("location_ID");
-				}
-			};
-			String sql = "SELECT * FROM audio_story";
-			this.audios = toMap (sql, cr);
-		}
 		return this.audios.values ();
+	}
+	public Collection<AudioBookStory> getAudioBookStories ()
+	{
+		return this.audioBooks.values ();
 	}
 	//**************************************************************************
 	/**
@@ -272,50 +294,44 @@ public class JDBCDatabase
 		}
 	}
 	//**************************************************************************
-	public Story insertStory (Location location, String title)
+	private long insertStory (Location location, String title)
 	{
 		try {
-			String sql = "INSERT INTO story (title, type, location_ID) VALUES (?, ?, ?)";
+			String sql = "INSERT INTO story (title, location_ID) VALUES (?, ?)";
 			PreparedStatement ps = this.connection.prepareStatement (sql, Statement.RETURN_GENERATED_KEYS);
 			ps.setString (1, title);
-			ps.setInt (2, 1);
-			ps.setLong (3, location.ID);
+			ps.setLong (2, location.ID);
 			ps.executeUpdate ();
 			ResultSet rs = ps.getGeneratedKeys ();
 			rs.next ();
-			long newID = rs.getLong (1);
+			long result = rs.getLong (1);
 			ps.close ();
-			Story insertedStory = new Story (newID, location, title);
-			this.stories.put (newID, insertedStory);
-			return insertedStory;
+			return result;
 		}
 		catch (SQLException ex) {
 			System.err.println ("Error inserting story");
 			System.err.println (ex.getMessage ());
 			ex.printStackTrace (System.err);
-			return null;
+			return -1;
 		}
 	}
-	public boolean removeStory (Story story)
+	private boolean removeStory (AbstractStory story)
 	{
-		try {
-			String sql = "DELETE FROM story WHERE ID = ?";
-			PreparedStatement ps = this.connection.prepareStatement (sql);
+		String sql = "DELETE FROM story WHERE ID = ?";
+		int rowCount;
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
 			ps.setLong (1, story.ID);
-			System.out.println (ps.toString ());
-			int rowCount = ps.executeUpdate ();
-			ps.close ();
-			System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
-			this.stories.remove (story.ID);
-			return true;
+			rowCount = ps.executeUpdate ();
 		}
 		catch (SQLException ex) {
 			System.err.println ("Error removing story");
 			ex.printStackTrace (System.err);
 			return false;
 		}
+		System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
+		return true;
 	}
-	public boolean updateStory (Story story)
+	private boolean updateStory (AbstractStory story)
 	{
 		try {
 			String sql = "UPDATE story SET title = ?, location_ID = ? WHERE id = ?";
@@ -337,20 +353,16 @@ public class JDBCDatabase
 	//**************************************************************************
 	public AudioStory insertAudioStory (Location location, String title, String filename)
 	{
-		Story story = insertStory (location, title);
-		if (story == null)
-			return null;
+		long story_ID = insertStory (location, title);
 		try {
 			String sql = "INSERT INTO audio (story_ID, filename) VALUES (?, ?)";
 			PreparedStatement ps = this.connection.prepareStatement (sql);
-			ps.setLong (1, story.ID);
+			ps.setLong (1, story_ID);
 			ps.setString (2, filename);
 			ps.executeUpdate ();
-			ResultSet rs = ps.getGeneratedKeys ();
-			rs.next ();
 			ps.close ();
-			AudioStory insertedStory = new AudioStory (story.ID, location, title, filename);
-			this.audios.put (story.ID, insertedStory);
+			AudioStory insertedStory = new AudioStory (story_ID, location, title, filename);
+			this.audios.put (story_ID, insertedStory);
 			return insertedStory;
 		}
 		catch (SQLException ex) {
@@ -360,24 +372,35 @@ public class JDBCDatabase
 			return null;
 		}
 	}
+	public boolean deleteAudioStory (AudioStory story)
+	{
+		String sql = "DELETE FROM audio WHERE story_ID = ?";
+		int rowCount;
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setLong (1, story.ID);
+			rowCount = ps.executeUpdate ();
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error removing audio story");
+			ex.printStackTrace (System.err);
+			return false;
+		}
+		this.audios.remove (story.ID);
+		System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
+		return this.removeStory (story);
+	}
 	public boolean updateAudioStory (AudioStory story)
 	{
 		String sql;
 		PreparedStatement ps;
 		int rowCount;
 		try {
-			sql = "UPDATE story SET title = ?, location_ID = ? WHERE id = ?";
-			ps = this.connection.prepareStatement (sql);
-			ps.setString (1, story.title);
-			ps.setLong (2, story.location.getID ());
-			ps.setLong (3, story.ID);
-			rowCount = ps.executeUpdate ();
-			ps.close ();
+			this.updateStory (story);
 			sql = "UPDATE audio SET filename = ? WHERE story_ID = ?";
 			ps = this.connection.prepareStatement (sql);
 			ps.setString (1, story.filename);
 			ps.setLong (2, story.ID);
-			rowCount += ps.executeUpdate ();
+			rowCount = ps.executeUpdate ();
 			ps.close ();
 			System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
 			return true;
@@ -387,6 +410,58 @@ public class JDBCDatabase
 			ex.printStackTrace (System.err);
 			return false;
 		}
+	}
+	//**************************************************************************
+	public AudioBookStory insertAudioBookStory (Location location, String title, String filename, String transcription)
+	{
+		long story_ID = insertStory (location, title);
+		String sql = "INSERT INTO audio_book (story_ID, filename, transcription) VALUES (?, ?, ?)";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setLong (1, story_ID);
+			ps.setString (2, filename);
+			ps.setString (3, transcription);
+			ps.executeUpdate ();
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error inserting audio book");
+			ex.printStackTrace (System.err);
+			return null;
+		}
+		AudioBookStory insertedStory = new AudioBookStory (story_ID, location, title, filename, transcription);
+		this.audioBooks.put (story_ID, insertedStory);
+		return insertedStory;
+	}
+	public boolean deleteAudioBookStory (AudioBookStory story)
+	{
+		String sql = "DELETE FROM audio_book WHERE story_ID = ?";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setLong (1, story.ID);
+			ps.executeUpdate ();
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error removing audio book story");
+			ex.printStackTrace (System.err);
+			return false;
+		}
+		this.audioBooks.remove (story.ID);
+		return this.removeStory (story);
+	}
+	public boolean updateAudioBookStory (AudioBookStory story)
+	{
+		this.updateStory (story);
+		String sql = "UPDATE audio_book SET filename = ?, transcription = ? WHERE story_ID = ?";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setString (1, story.filename);
+			ps.setString (2, story.transcription);
+			ps.setLong (3, story.ID);
+			ps.executeUpdate ();
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error updating audio book story");
+			ex.printStackTrace (System.err);
+			return false;
+		}
+		return true;
 	}
 	//**************************************************************************
 	/**
@@ -432,13 +507,14 @@ public class JDBCDatabase
 		public T getData (ResultSet cursor) throws SQLException;
 	}
 	/**
-	 * Execute a SQL select statement and return the result as a collection of objects.
+	 * Execute a SQL select statement and return the result as a map of objects.
 	 * If there is an exception, an empty collection is returned.
 	 *
 	 * @param <T> The type that represents the rows of the result.
 	 * @param selectSql The SQL select statement.
-	 * @param cr An object that converts a row to a Java object.
-	 * @return A collection of objects representing the result of the SQL select.
+	 * @param cr An object that converts a row to a Java object
+	 * and returns its key.
+	 * @return A map of objects representing the result of the SQL select.
 	 */
 	private <T> Map<Long, T> toMap (String selectSql, CursorToRecord<T> cr)
 	{
