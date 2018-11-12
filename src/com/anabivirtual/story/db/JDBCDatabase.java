@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.function.BiConsumer;
  
 /**
  *
@@ -36,6 +37,11 @@ final public class JDBCDatabase
 		this.stories = new LinkedHashMap<> ();
 		this.audios = this.readAudioStories ();
 		this.audioBooks = this.readAudioBookStories ();
+		BiConsumer<Long, ? super AbstractStory> bic = (Long k, AbstractStory s) -> {
+			JDBCDatabase.this.stories.put (k, s);
+		};
+		this.audios.forEach (bic);
+		this.audioBooks.forEach (bic);
 	}
 
 	static public JDBCDatabase createDatabase (String fileName)
@@ -159,7 +165,7 @@ final public class JDBCDatabase
 			@Override
 			public long getKey (ResultSet rs) throws SQLException
 			{
-				return rs.getLong ("location_ID");
+				return rs.getLong ("story_ID");
 			}
 		};
 		return toMap (sql, cr);
@@ -190,7 +196,7 @@ final public class JDBCDatabase
 			@Override
 			public long getKey (ResultSet rs) throws SQLException
 			{
-				return rs.getLong ("location_ID");
+				return rs.getLong ("story_ID");
 			}
 		};
 		return toMap (sql, cr);
