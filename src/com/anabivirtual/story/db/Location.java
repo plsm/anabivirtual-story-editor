@@ -5,7 +5,9 @@ package com.anabivirtual.story.db;
  * @author pedro
  */
 public class Location
-  implements com.anabivirtual.story.core.Location
+  implements
+  com.anabivirtual.story.core.Location,
+  Keyable
 {
 	public final long ID;
 	public double latitude;
@@ -60,6 +62,12 @@ public class Location
 	final public void setName (String name)
 	{
 		this.name = name;
+	}
+
+	@Override
+	public long getKey ()
+	{
+		return this.ID;
 	}
 
 	@Override

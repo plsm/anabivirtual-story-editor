@@ -5,7 +5,9 @@ package com.anabivirtual.story.db;
  * @author pedro
  */
 abstract public class AbstractStory
-  implements com.anabivirtual.story.core.Story<Location>
+  implements
+  com.anabivirtual.story.core.Story<Location>,
+  Keyable
 {
 	public final long ID;
 	public Location location;
@@ -45,5 +47,11 @@ abstract public class AbstractStory
 	final public void setLocation (Location location)
 	{
 		this.location = location;
+	}
+
+	@Override
+	public long getKey ()
+	{
+		return this.ID;
 	}
 }
