@@ -1,7 +1,7 @@
 package com.anabivirtual.story.editor;
 
 import com.anabivirtual.story.db.JDBCDatabase;
-import com.anabivirtual.story.db.Story;
+import com.anabivirtual.story.db.AbstractStory;
 import com.anabivirtual.story.db.Location;
 import java.util.Collection;
 
@@ -14,8 +14,8 @@ final public class StoryTableModel
 	  extends javax.swing.table.AbstractTableModel
 {
 	final private JDBCDatabase database;
-	final Collection<Story> stories;
-	final private RandomAccessIterator<Story> ci;
+	final Collection<AbstractStory> stories;
+	final private RandomAccessIterator<AbstractStory> ci;
 
 	enum Column {
 		ID,
@@ -43,7 +43,7 @@ final public class StoryTableModel
 	@Override
 	public Object getValueAt (int rowIndex, int columnIndex)
 	{
-		Story story = this.getStory (rowIndex);
+		AbstractStory story = this.getStory (rowIndex);
 		switch (Column.values () [columnIndex]) {
 			case ID:
 				return story.ID;
@@ -90,7 +90,7 @@ final public class StoryTableModel
 	@Override
 	public void setValueAt (Object aValue, int rowIndex, int columnIndex)
 	{
-		Story aStory = this.getStory (rowIndex);
+		AbstractStory aStory = this.getStory (rowIndex);
 		switch (Column.values () [columnIndex]) {
 			case ID:
 				return ;
@@ -112,7 +112,7 @@ final public class StoryTableModel
 		throw new Error ("Not reachable");
 	}
 
-	Story getStory (int rowIndex)
+	AbstractStory getStory (int rowIndex)
 	{
 		return this.ci.getValueAt (rowIndex);
 	}

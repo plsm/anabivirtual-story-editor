@@ -26,12 +26,14 @@ final public class JDBCDatabase
 {
 	private final Connection connection;
 	private final Map<Long, Location> locations;
+	private final Map<Long, AbstractStory> stories;
 	private final Map<Long, AudioStory> audios;
 	private final Map<Long, AudioBookStory> audioBooks;
 	JDBCDatabase (Connection connection)
 	{
 		this.connection = connection;
 		this.locations = this.readLocations ();
+		this.stories = new LinkedHashMap<> ();
 		this.audios = this.readAudioStories ();
 		this.audioBooks = this.readAudioBookStories ();
 	}
@@ -197,6 +199,10 @@ final public class JDBCDatabase
 	{
 		return this.locations.values ();
 	}
+	public Collection<AbstractStory> getStories ()
+	{
+		return this.stories.values ();
+	}
 	public Collection<AudioStory> getAudioStories ()
 	{
 		return this.audios.values ();
@@ -328,10 +334,11 @@ final public class JDBCDatabase
 			ex.printStackTrace (System.err);
 			return false;
 		}
+		this.stories.remove (story.ID);
 		System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
 		return true;
 	}
-	private boolean updateStory (AbstractStory story)
+	public boolean updateStory (AbstractStory story)
 	{
 		try {
 			String sql = "UPDATE story SET title = ?, location_ID = ? WHERE id = ?";
@@ -362,6 +369,7 @@ final public class JDBCDatabase
 			ps.executeUpdate ();
 			ps.close ();
 			AudioStory insertedStory = new AudioStory (story_ID, location, title, filename);
+			this.stories.put (story_ID, insertedStory);
 			this.audios.put (story_ID, insertedStory);
 			return insertedStory;
 		}
@@ -428,6 +436,7 @@ final public class JDBCDatabase
 			return null;
 		}
 		AudioBookStory insertedStory = new AudioBookStory (story_ID, location, title, filename, transcription);
+		this.stories.put (story_ID, insertedStory);
 		this.audioBooks.put (story_ID, insertedStory);
 		return insertedStory;
 	}
