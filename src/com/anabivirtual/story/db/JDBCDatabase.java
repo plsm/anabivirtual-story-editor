@@ -45,7 +45,25 @@ final public class JDBCDatabase
 		this.audioBooks.forEach (bic);
 		this.historicalImages.forEach (bic);
 	}
-
+	/**
+	 * Closes the database and clears all structures containing information from
+	 * the database.
+	 */
+	public void close ()
+	{
+		try {
+			this.connection.close ();
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error closing the database");
+			ex.printStackTrace (System.err);
+		}
+		this.locations.clear ();
+		this.stories.clear ();
+		this.audios.clear ();
+		this.audioBooks.clear ();
+		this.historicalImages.clear ();
+	}
 	static public JDBCDatabase createDatabase (String fileName)
 	{
 		File dbFile = new File (fileName);
