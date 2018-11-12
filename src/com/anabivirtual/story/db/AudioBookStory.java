@@ -10,7 +10,7 @@ public class AudioBookStory
   extends AudioStory
   implements com.anabivirtual.story.core.AudioBookStory<Location>
 {
-	String transcription;
+	public String transcription;
 
 	AudioBookStory (long ID, Location location, String title, String filename, String transcription)
 	{
