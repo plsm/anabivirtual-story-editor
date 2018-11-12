@@ -17,6 +17,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
  
 /**
  *
@@ -30,6 +32,7 @@ final public class JDBCDatabase
 	private final Map<Long, AudioStory> audios;
 	private final Map<Long, AudioBookStory> audioBooks;
 	private final Map<Long, HistoricalImageStory> historicalImages;
+	private final Map<Long, BackgroundMusic> backgroundMusic;
 	JDBCDatabase (Connection connection)
 	{
 		this.connection = connection;
@@ -44,6 +47,7 @@ final public class JDBCDatabase
 		this.audios.forEach (bic);
 		this.audioBooks.forEach (bic);
 		this.historicalImages.forEach (bic);
+		this.backgroundMusic = this.readBackgroundMusic ();
 	}
 	/**
 	 * Closes the database and clears all structures containing information from
@@ -192,6 +196,17 @@ final public class JDBCDatabase
 		  rs.getString ("filename"));
 		return toMap (sql, c2r);
 	}
+	private Map<Long, BackgroundMusic> readBackgroundMusic ()
+	{
+		String sql = "SELECT * FROM background_music";
+		CursorToRecord<BackgroundMusic> c2r = (ResultSet rs) -> new BackgroundMusic (
+		  rs.getLong ("ID"),
+		  rs.getString ("filename"),
+		  rs.getDouble ("region_center_latitude"),
+		  rs.getDouble ("region_center_longitude"),
+		  rs.getDouble ("region_radius"));
+		return toMap (sql, c2r);
+	}
 	public Collection<Location> getLocations ()
 	{
 		return this.locations.values ();
@@ -211,6 +226,10 @@ final public class JDBCDatabase
 	public Collection<HistoricalImageStory> getHistoricalImageStories ()
 	{
 		return this.historicalImages.values ();
+	}
+	public Collection<BackgroundMusic> getBackgroundMusic ()
+	{
+		return this.backgroundMusic.values ();
 	}
 	//**************************************************************************
 	/**
@@ -520,6 +539,71 @@ final public class JDBCDatabase
 		}
 		catch (SQLException ex) {
 			System.err.println ("Error updating historical image story");
+			ex.printStackTrace (System.err);
+			return false;
+		}
+		return true;
+	}
+	//**************************************************************************
+	public BackgroundMusic insertBackgroundMusic (String filename,
+	  double regionCenterLatitude, double regionCenterLongitude,
+	  double regionRadius)
+	{
+		String sql = "INSERT INTO background_music (filename, region_center_latitude, region_center_longitude, region_radius) VALUES (?, ?, ?, ?)";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql, Statement.RETURN_GENERATED_KEYS)) {
+			ps.setString (1, filename);
+			ps.setDouble (2, regionCenterLatitude);
+			ps.setDouble (3, regionCenterLongitude);
+			ps.setDouble (4, regionRadius);
+			ps.executeUpdate ();
+			ResultSet rs = ps.getGeneratedKeys ();
+			rs.next ();
+			long newID = rs.getLong (1);
+			BackgroundMusic insertedBackgroundMusic = new BackgroundMusic (
+			  newID,
+			  filename,
+			  regionCenterLatitude, regionCenterLongitude,
+			  regionRadius
+			);
+			this.backgroundMusic.put (newID, insertedBackgroundMusic);
+			return insertedBackgroundMusic;
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error inserting background music " + filename);
+			ex.printStackTrace (System.err);
+			return null;
+		}
+	}
+	public boolean deleteBackgroundMusic (BackgroundMusic backgroundMusic)
+	{
+		String sql = "DELETE FROM background_music WHERE ID = ?";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setLong (1, backgroundMusic.getID ());
+			ps.executeUpdate ();
+			ps.close ();
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error deleting background music " + backgroundMusic);
+			ex.printStackTrace (System.err);
+			return false;
+		}
+		this.backgroundMusic.remove (backgroundMusic.getID ());
+		return true;
+	}
+	public boolean updateBackgroundMusic (BackgroundMusic backgroundMusic)
+	{
+		String sql = "UPDATE background_music SET filename = ?, region_center_latitude = ?, region_center_longitude = ?, region_radius = ? WHERE ID = ?";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setString (1, backgroundMusic.getFilename ());
+			ps.setDouble (2, backgroundMusic.getRegionCenterLatitude ());
+			ps.setDouble (3, backgroundMusic.getRegionCenterLongitude ());
+			ps.setDouble (4, backgroundMusic.getRegionRadius ());
+			ps.setLong (5, backgroundMusic.getID ());
+			ps.executeUpdate ();
+			ps.close ();
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error while updating backgrund music " + backgroundMusic);
 			ex.printStackTrace (System.err);
 			return false;
 		}

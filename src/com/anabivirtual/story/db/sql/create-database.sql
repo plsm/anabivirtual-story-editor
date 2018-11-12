@@ -31,6 +31,14 @@ CREATE TABLE historical_image (
   FOREIGN KEY (story_ID) REFERENCES story (ID) ON DELETE CASCADE
 );
 
+CREATE TABLE background_music (
+  ID INTEGER PRIMARY KEY NOT NULL,
+  filename TEXT NOT NULL,
+  region_center_latitude REAL NOT NULL,
+  region_center_longitude REAL NOT NULL,
+  region_radius REAL NOT NULL
+);
+
 CREATE INDEX location_index
   ON location (latitude, longitude);
 
