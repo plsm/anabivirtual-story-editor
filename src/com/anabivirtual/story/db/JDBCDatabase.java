@@ -12,7 +12,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -30,6 +29,7 @@ final public class JDBCDatabase
 	private final Map<Long, AbstractStory> stories;
 	private final Map<Long, AudioStory> audios;
 	private final Map<Long, AudioBookStory> audioBooks;
+	private final Map<Long, HistoricalImageStory> historicalImages;
 	JDBCDatabase (Connection connection)
 	{
 		this.connection = connection;
@@ -37,11 +37,13 @@ final public class JDBCDatabase
 		this.stories = new LinkedHashMap<> ();
 		this.audios = this.readAudioStories ();
 		this.audioBooks = this.readAudioBookStories ();
+		this.historicalImages = this.readHistoricalImageStories ();
 		BiConsumer<Long, ? super AbstractStory> bic = (Long k, AbstractStory s) -> {
 			JDBCDatabase.this.stories.put (k, s);
 		};
 		this.audios.forEach (bic);
 		this.audioBooks.forEach (bic);
+		this.historicalImages.forEach (bic);
 	}
 
 	static public JDBCDatabase createDatabase (String fileName)
@@ -125,50 +127,24 @@ final public class JDBCDatabase
 	private Map<Long, Location> readLocations ()
 	{
 		String sql = "SELECT * FROM location";
-		CursorToRecord<Location> c2r = new CursorToRecord<Location> ()
-		{
-			@Override
-			public Location getData (ResultSet rs) throws SQLException
-			{
-				return new Location (
-				  rs.getLong ("ID"),
-				  rs.getDouble ("latitude"),
-				  rs.getDouble ("longitude"),
-				  rs.getString ("name")
-				);
-			}
-
-			@Override
-			public long getKey (ResultSet rs) throws SQLException
-			{
-				return rs.getLong ("ID");
-			}
-		};
+		CursorToRecord<Location> c2r = (ResultSet rs) -> new Location (
+		  rs.getLong ("ID"),
+		  rs.getDouble ("latitude"),
+		  rs.getDouble ("longitude"),
+		  rs.getString ("name")
+		);
 		return toMap (sql, c2r);
 	}
 	private Map<Long, AudioStory> readAudioStories ()
 	{
 		String sql = "SELECT * FROM audio_story";
-		CursorToRecord<AudioStory> cr = new CursorToRecord<AudioStory> ()
-		{
-			@Override
-			public AudioStory getData (ResultSet rs) throws SQLException
-			{
-				return new AudioStory (
-				  rs.getLong ("story_ID"),
-				  locations.get (rs.getLong ("location_ID")),
-				  rs.getString ("title"),
-				  rs.getString ("filename")
-				);
-			}
-
-			@Override
-			public long getKey (ResultSet rs) throws SQLException
-			{
-				return rs.getLong ("story_ID");
-			}
-		};
-		return toMap (sql, cr);
+		CursorToRecord<AudioStory> c2r = (ResultSet rs) -> new AudioStory (
+		  rs.getLong ("story_ID"),
+		  JDBCDatabase.this.locations.get (rs.getLong ("location_ID")),
+		  rs.getString ("title"),
+		  rs.getString ("filename")
+		);
+		return toMap (sql, c2r);
 	}
 	/**
 	 * Read the view {@code audio_book} and return a map containing
@@ -179,27 +155,24 @@ final public class JDBCDatabase
 	private Map<Long, AudioBookStory> readAudioBookStories ()
 	{
 		String sql = "SELECT * FROM audio_book";
-		CursorToRecord<AudioBookStory> cr = new CursorToRecord<AudioBookStory> ()
-		{
-			@Override
-			public AudioBookStory getData (ResultSet rs) throws SQLException
-			{
-				return new AudioBookStory (
-				  rs.getLong ("story_ID"),
-				  locations.get (rs.getLong ("location_ID")),
-				  rs.getString ("title"),
-				  rs.getString ("filename"),
-				  rs.getString ("transcription")
-				);
-			}
-
-			@Override
-			public long getKey (ResultSet rs) throws SQLException
-			{
-				return rs.getLong ("story_ID");
-			}
-		};
-		return toMap (sql, cr);
+		CursorToRecord<AudioBookStory> c2r = (ResultSet rs) -> new AudioBookStory (
+		  rs.getLong ("story_ID"),
+		  JDBCDatabase.this.locations.get (rs.getLong ("location_ID")),
+		  rs.getString ("title"),
+		  rs.getString ("filename"),
+		  rs.getString ("transcription")
+		);
+		return toMap (sql, c2r);
+	}
+	private Map<Long, HistoricalImageStory> readHistoricalImageStories ()
+	{
+		String sql = "SELECT * from historical_image_story";
+		CursorToRecord<HistoricalImageStory> c2r = (ResultSet rs) -> new HistoricalImageStory (
+		  rs.getLong ("story_ID"),
+		  JDBCDatabase.this.locations.get (rs.getLong ("location_ID")),
+		  rs.getString ("title"),
+		  rs.getString ("filename"));
+		return toMap (sql, c2r);
 	}
 	public Collection<Location> getLocations ()
 	{
@@ -216,6 +189,10 @@ final public class JDBCDatabase
 	public Collection<AudioBookStory> getAudioBookStories ()
 	{
 		return this.audioBooks.values ();
+	}
+	public Collection<HistoricalImageStory> getHistoricalImageStories ()
+	{
+		return this.historicalImages.values ();
 	}
 	//**************************************************************************
 	/**
@@ -479,66 +456,79 @@ final public class JDBCDatabase
 		return true;
 	}
 	//**************************************************************************
-	/**
-	 * Execute a SQL select statement and return the result as a collection of objects.
-	 * If there is an exception, an empty collection is returned.
-	 *
-	 * @param <T> The type that represents the rows of the result.
-	 * @param selectSql The SQL select statement.
-	 * @param cr A function that converts a row to a Java object.
-	 * @return A collection of objects representing the result of the SQL select.
-	 */
-	private <T> Collection<T> toCollection (String selectSql, CursorRecord<T> cr)
+	public HistoricalImageStory insertHistoricalImageStory (Location location, String title, String filename)
 	{
-		ArrayList<T> result = new ArrayList<> ();
-		try {
-			Statement stmt = this.connection.createStatement ();
-			ResultSet rs = stmt.executeQuery (selectSql);
-			while (rs.next ()) {
-				result.add (cr.getData (rs));
-			}
-			stmt.close ();
+		long story_ID = this.insertStory (location, title);
+		String sql = "INSERT INTO historical_image (story_ID, filename) VALUES (?, ?)";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setLong (1, story_ID);
+			ps.setString (2, filename);
+			ps.executeUpdate ();
 		}
 		catch (SQLException ex) {
-			System.err.println (ex.getMessage ());
+			System.err.println ("Error inserting historical image story");
+			ex.printStackTrace (System.err);
+			return null;
 		}
-		return result;
+		HistoricalImageStory insertedStory =
+		  new HistoricalImageStory (story_ID, location, title, filename);
+		this.stories.put (story_ID, insertedStory);
+		this.historicalImages.put (story_ID, insertedStory);
+		return insertedStory;
 	}
-	/**
-	 * An interface that maps the current row in a result set to a Java object.
-	 * This interface is used by the {@code toCollection method} to convert a result set to a Java collection.
-	 *
-	 * @param <T> The type of the object that represents the rows in the result set.
-	 * @see #toCollection(java.lang.String, com.anabivirtual.story.db.JDBCDatabase.CursorRecord)
-	 */
-	@FunctionalInterface
-	private interface CursorRecord<T> {
-		/**
-		 * Convert the current row to a Java object.
-		 * @param cursor The result set holding the cursor to the current row.
-		 * @return A Java object representing the current row.
-		 * @throws SQLException 
-		 */
-		public T getData (ResultSet cursor) throws SQLException;
+	public boolean deleteHistoricalImageStory (HistoricalImageStory story)
+	{
+		String sql = "DELETE FROM historical_image WHERE story_ID = ?";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setLong (1, story.ID);
+			ps.executeUpdate ();
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error removing audio book story");
+			ex.printStackTrace (System.err);
+			return false;
+		}
+		this.historicalImages.remove (story.ID);
+		return this.removeStory (story);
 	}
+	public boolean updateHistoricalImageStory (HistoricalImageStory story)
+	{
+		this.updateStory (story);
+		String sql = "UPDATE historical_image SET filename = ? WHERE story_ID = ?";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setString (1, story.filename);
+			ps.setLong (2, story.ID);
+			ps.executeUpdate ();
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error updating historical image story");
+			ex.printStackTrace (System.err);
+			return false;
+		}
+		return true;
+	}
+	//**************************************************************************
 	/**
 	 * Execute a SQL select statement and return the result as a map of objects.
 	 * If there is an exception, an empty collection is returned.
 	 *
 	 * @param <T> The type that represents the rows of the result.
+	 * Has to extend the {@code Keyable} interface in order to
+	 * provide the row key.
 	 * @param selectSql The SQL select statement.
 	 * @param cr An object that converts a row to a Java object
 	 * and returns its key.
 	 * @return A map of objects representing the result of the SQL select.
 	 */
-	private <T> Map<Long, T> toMap (String selectSql, CursorToRecord<T> cr)
+	private <T extends Keyable> Map<Long, T> toMap (String selectSql, CursorToRecord<T> cr)
 	{
 		Map<Long, T> result = new LinkedHashMap<> ();
 		try {
 			Statement stmt = this.connection.createStatement ();
 			ResultSet rs = stmt.executeQuery (selectSql);
 			while (rs.next ()) {
-				result.put (cr.getKey (rs), cr.getData (rs));
+				T record = cr.getData (rs);
+				result.put (record.getKey (), record);
 			}
 			stmt.close ();
 		}
@@ -556,6 +546,7 @@ final public class JDBCDatabase
 	 * set.
 	 * @see #toMap(java.lang.String, com.anabivirtual.story.db.JDBCDatabase.CursorToRecord)
 	 */
+	@FunctionalInterface
 	private interface CursorToRecord<T> {
 		/**
 		 * Convert the current row to a Java object.
@@ -564,13 +555,6 @@ final public class JDBCDatabase
 		 * @throws SQLException
 		 */
 		public T getData (ResultSet cursor) throws SQLException;
-		/**
-		 * Get the key of the current row.
-		 * @param cursor The result set holding the cursor to the current row.
-		 * @return the key of the current row.
-		 * @throws SQLException
-		 */
-		public long getKey (ResultSet cursor) throws SQLException;
 	}
 }
 

@@ -13,15 +13,21 @@ CREATE TABLE story (
 );
 
 CREATE TABLE audio (
-  story_ID INTEGER NOT NULL,
+  story_ID INTEGER PRIMARY KEY NOT NULL,
   filename TEXT NOT NULL,
   FOREIGN KEY (story_ID) REFERENCES story (ID) ON DELETE CASCADE
 );
 
 CREATE TABLE audio_book (
-  story_ID INTEGER NOT NULL,
+  story_ID INTEGER PRIMARY KEY NOT NULL,
   filename TEXT NOT NULL,
   transcription TEXT NOT NULL,
+  FOREIGN KEY (story_ID) REFERENCES story (ID) ON DELETE CASCADE
+);
+
+CREATE TABLE historical_image (
+  story_ID INTEGER PRIMARY KEY NOT NULL,
+  filename TEXT NOT NULL,
   FOREIGN KEY (story_ID) REFERENCES story (ID) ON DELETE CASCADE
 );
 
@@ -69,3 +75,23 @@ CREATE VIEW audio_book_story (
   FROM location
   INNER JOIN story ON location.ID = story.location_ID
   INNER JOIN audio_book ON story.ID = audio_book.story_ID;
+
+CREATE VIEW historical_image_story (
+  location_ID,
+  story_ID,
+  latitude,
+  longitude,
+  name,
+  title,
+  filename
+) AS SELECT
+  location.ID,
+  story.ID,
+  location.latitude,
+  location.longitude,
+  location.name,
+  story.title,
+  historical_image.filename
+  FROM location
+  INNER JOIN story ON location.ID = story.location_ID
+  INNER JOIN historical_image ON story.ID = historical_image.story_ID;
