@@ -172,7 +172,7 @@ final public class JDBCDatabase
 	 */
 	private Map<Long, AudioBookStory> readAudioBookStories ()
 	{
-		String sql = "SELECT * FROM audio_book";
+		String sql = "SELECT * FROM audio_book_story";
 		CursorToRecord<AudioBookStory> c2r = (ResultSet rs) -> new AudioBookStory (
 		  rs.getLong ("story_ID"),
 		  JDBCDatabase.this.locations.get (rs.getLong ("location_ID")),
