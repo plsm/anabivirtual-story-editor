@@ -9,10 +9,10 @@ public class Location
   com.anabivirtual.story.core.Location,
   Keyable
 {
-	public final long ID;
-	public double latitude;
-	public double longitude;
-	public String name;
+	private final long ID;
+	private double latitude;
+	private double longitude;
+	private String name;
 
 	public Location (long ID, double latitude, double longitude, String name)
 	{
@@ -34,7 +34,11 @@ public class Location
 		return latitude;
 	}
 
-	@Override
+	/**
+	 * Set the latitude of this location.  Units are degree.
+	 *
+	 * @param latitude the new latitude of this location.
+	 */
 	final public void setLatitude (double latitude)
 	{
 		this.latitude = latitude;
@@ -46,7 +50,11 @@ public class Location
 		return longitude;
 	}
 
-	@Override
+	/**
+	 * Set the longitude of this location.  Units are degree.
+	 *
+	 * @param longitude the new longitude of this location.
+	 */
 	final public void setLongitude (double longitude)
 	{
 		this.longitude = longitude;
@@ -58,7 +66,11 @@ public class Location
 		return name;
 	}
 
-	@Override
+	/**
+	 * Set the name of this location.
+	 *
+	 * @param name the new name of this location.
+	 */
 	final public void setName (String name)
 	{
 		this.name = name;

@@ -44,13 +44,17 @@ public class BackgroundMusic
 	}
 
 	@Override
-	public String getFilename ()
+	public String getAudioFilename ()
 	{
 		return filename;
 	}
 
-	@Override
-	public void setFilename (String filename)
+	/**
+	 * Set the audio filename of this music.
+	 *
+	 * @param filename the new audio filename of this music.
+	 */
+	public void setAudioFilename (String filename)
 	{
 		this.filename = filename;
 	}
@@ -61,7 +65,13 @@ public class BackgroundMusic
 		return regionCenterLatitude;
 	}
 
-	@Override
+	/**
+	 * Set the latitude of the center of the region where the music is played.
+	 * Units are degree.
+	 *
+	 * @param regionCenterLatitude the new latitude of the center of the region
+	 * where the music is played.
+	 */
 	public void setRegionCenterLatitude (double regionCenterLatitude)
 	{
 		this.regionCenterLatitude = regionCenterLatitude;
@@ -73,7 +83,13 @@ public class BackgroundMusic
 		return regionCenterLongitude;
 	}
 
-	@Override
+	/**
+	 * Set the longitude of the center of the region where the music is played.
+	 * Units are degree.
+	 *
+	 * @param regionCenterLongitude the new longitude of the center of the region
+	 * where the music is played.
+	 */
 	public void setRegionCenterLongitude (double regionCenterLongitude)
 	{
 		this.regionCenterLongitude = regionCenterLongitude;
@@ -85,7 +101,12 @@ public class BackgroundMusic
 		return regionRadius;
 	}
 
-	@Override
+	/**
+	 * Set the radius of the region where the music is played.
+	 *
+	 * @param regionRadius the new radius of the region where the music is
+	 * played.
+	 */
 	public void setRegionRadius (double regionRadius)
 	{
 		this.regionRadius = regionRadius;

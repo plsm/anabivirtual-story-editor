@@ -1,3 +1,5 @@
+PRAGMA foreign_keys = true;
+
 CREATE TABLE location (
   ID INTEGER PRIMARY KEY ASC NOT NULL,
   latitude REAL NOT NULL,
@@ -9,31 +11,21 @@ CREATE TABLE story (
   ID INTEGER PRIMARY KEY ASC NOT NULL,
   title TEXT NOT NULL,
   location_ID INT NOT NULL,
+  audio_filename TEXT NOT NULL,
+  transcription TEXT NOT NULL,
   FOREIGN KEY (location_ID) REFERENCES location (ID) ON DELETE CASCADE
 );
 
-CREATE TABLE audio (
-  story_ID INTEGER PRIMARY KEY NOT NULL,
-  filename TEXT NOT NULL,
-  FOREIGN KEY (story_ID) REFERENCES story (ID) ON DELETE CASCADE
-);
-
-CREATE TABLE audio_book (
-  story_ID INTEGER PRIMARY KEY NOT NULL,
-  filename TEXT NOT NULL,
-  transcription TEXT NOT NULL,
-  FOREIGN KEY (story_ID) REFERENCES story (ID) ON DELETE CASCADE
-);
-
-CREATE TABLE historical_image (
-  story_ID INTEGER PRIMARY KEY NOT NULL,
-  filename TEXT NOT NULL,
-  FOREIGN KEY (story_ID) REFERENCES story (ID) ON DELETE CASCADE
+CREATE TABLE place (
+  ID INTEGER PRIMARY KEY ASC NOT NULL,
+  image_filename TEXT NOT NULL,
+  location_ID INT NOT NULL,
+  FOREIGN KEY (location_ID) REFERENCES location (ID) ON DELETE CASCADE
 );
 
 CREATE TABLE background_music (
   ID INTEGER PRIMARY KEY NOT NULL,
-  filename TEXT NOT NULL,
+  audio_filename TEXT NOT NULL,
   region_center_latitude REAL NOT NULL,
   region_center_longitude REAL NOT NULL,
   region_radius REAL NOT NULL
@@ -42,34 +34,14 @@ CREATE TABLE background_music (
 CREATE INDEX location_index
   ON location (latitude, longitude);
 
-CREATE VIEW audio_story (
+CREATE VIEW view_story (
   location_ID,
   story_ID,
   latitude,
   longitude,
-  name,
+  location_name,
   title,
-  filename
-) AS SELECT
-  location.ID,
-  story.ID,
-  location.latitude,
-  location.longitude,
-  location.name,
-  story.title,
-  audio.filename
-  FROM location
-  INNER JOIN story ON location.ID = story.location_ID
-  INNER JOIN audio ON story.ID = audio.story_ID;
-
-CREATE VIEW audio_book_story (
-  location_ID,
-  story_ID,
-  latitude,
-  longitude,
-  name,
-  title,
-  filename,
+  audio_filename,
   transcription
 ) AS SELECT
   location.ID,
@@ -78,28 +50,24 @@ CREATE VIEW audio_book_story (
   location.longitude,
   location.name,
   story.title,
-  audio_book.filename,
-  audio_book.transcription
+  story.audio_filename,
+  story.transcription
   FROM location
-  INNER JOIN story ON location.ID = story.location_ID
-  INNER JOIN audio_book ON story.ID = audio_book.story_ID;
+  INNER JOIN story ON location.ID = story.location_ID;
 
-CREATE VIEW historical_image_story (
+CREATE VIEW view_place (
   location_ID,
-  story_ID,
+  place_ID,
   latitude,
   longitude,
-  name,
-  title,
-  filename
+  location_name,
+  image_filename
 ) AS SELECT
   location.ID,
-  story.ID,
+  place.ID,
   location.latitude,
   location.longitude,
   location.name,
-  story.title,
-  historical_image.filename
+  place.image_filename
   FROM location
-  INNER JOIN story ON location.ID = story.location_ID
-  INNER JOIN historical_image ON story.ID = historical_image.story_ID;
+  INNER JOIN place ON location.ID = place.location_ID;  

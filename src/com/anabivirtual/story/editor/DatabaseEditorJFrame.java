@@ -1,6 +1,6 @@
 package com.anabivirtual.story.editor;
 
-import com.anabivirtual.story.db.AudioStory;
+import com.anabivirtual.story.db.Story;
 import com.anabivirtual.story.db.JDBCDatabase;
 import com.anabivirtual.story.db.Location;
 import com.lynden.gmapsfx.GoogleMapView;
@@ -40,7 +40,6 @@ public class DatabaseEditorJFrame
 	final JDBCDatabase database;
 	final LocationTableModel locationTableModel;
 	final StoryTableModel storyTableModel;
-	final AudioStoryTableModel audioStoryTableModel;
 	private GoogleMapView gmc;
 	private GoogleMap map;
 	/**
@@ -61,11 +60,9 @@ public class DatabaseEditorJFrame
 		this.database = database;
 		this.locationTableModel = new LocationTableModel (database);
 		this.storyTableModel = new StoryTableModel (database);
-		this.audioStoryTableModel = new AudioStoryTableModel (database);
 		initComponents ();
 		this.initLocationTable ();
 		this.initStoryTable ();
-		this.initAudioStoryTable ();
 		this.setTitle (String.format (Utilities.getString ("DatabaseEditorFrameTitle"), file.getAbsolutePath ()));
 		JFXPanel panel = new JFXPanel ();
 		Platform.runLater (new Runnable ()
@@ -93,28 +90,21 @@ public class DatabaseEditorJFrame
 		longitudeColumn.setCellRenderer (new LongitudeRenderer ());
 	}
 
-	private void initStoryTable ()
-	{
-		TableColumn locationColumn = this.storiesTable.getColumnModel ()
-		  .getColumn (StoryTableModel.Column.LOCATION.ordinal ());
-		JComboBox combox = new JComboBox (new LocationComboBoxModel (this.database));
-		combox.setEditable (false);
-		combox.setRenderer (new LocationInComboboxRenderer ());
-		locationColumn.setCellEditor (new DefaultCellEditor (combox));
-		locationColumn.setCellRenderer (new LocationInTableRenderer ());
-	}
 	/**
 	 * Initialise the audio story table to use a combo box to select locations,
-	 * display location's name, and an editor to verify audio filenames.
+	 * display location's name, and an android resource editor to verify audio
+	 * filenames.
 	 */
-	private void initAudioStoryTable ()
+	private void initStoryTable ()
 	{
-		TableColumn locationColumn = this.audioStoriesTable.getColumnModel ()
-		  .getColumn (AudioStoryTableModel.Column.LOCATION.ordinal ());
+		// location column
+		TableColumn locationColumn = this.storiesTable.getColumnModel ()
+		  .getColumn (StoryTableModel.Column.LOCATION.ordinal ());
 		this.initLocationColumn (locationColumn);
-		TableColumn filenameColumn = this.audioStoriesTable.getColumnModel ()
-		  .getColumn (AudioStoryTableModel.Column.FILENAME.ordinal ());
-		filenameColumn.setCellEditor (new AndroidResourceEditor (this.audioStoriesTable));
+		// audio filename column
+		TableColumn filenameColumn = this.storiesTable.getColumnModel ()
+		  .getColumn (StoryTableModel.Column.AUDIO_FILENAME.ordinal ());
+		this.initAndroidResourceColumn (filenameColumn);
 	}
 
 	/**
@@ -133,6 +123,17 @@ public class DatabaseEditorJFrame
 		locationColumn.setCellEditor (new DefaultCellEditor (combox));
 		locationColumn.setCellRenderer (new LocationInTableRenderer ());
 		return model;
+	}
+	/**
+	 * Initialise an android resource column in a table in order to use an editor
+	 * that checks if the resource name is valid.
+	 *
+	 * @param androidResourceColumn the table column to initialise.
+	 */
+	private void initAndroidResourceColumn (TableColumn androidResourceColumn)
+	{
+		androidResourceColumn.setCellEditor (
+		  new AndroidResourceEditor (this.audioStoriesTable));
 	}
 
     /** This method is called from within the constructor to
@@ -216,9 +217,23 @@ public class DatabaseEditorJFrame
       storiesPanel.add(storiesScrollPane, java.awt.BorderLayout.CENTER);
 
       insertStoryButton.setText(Utilities.getString("InsertStory")); // NOI18N
+      insertStoryButton.addActionListener(new java.awt.event.ActionListener()
+      {
+         public void actionPerformed(java.awt.event.ActionEvent evt)
+         {
+            insertStoryButtonActionPerformed(evt);
+         }
+      });
       storiesControlPanel.add(insertStoryButton);
 
       deleteStoryButton.setText(Utilities.getString("DeleteStory")); // NOI18N
+      deleteStoryButton.addActionListener(new java.awt.event.ActionListener()
+      {
+         public void actionPerformed(java.awt.event.ActionEvent evt)
+         {
+            deleteStoryButtonActionPerformed(evt);
+         }
+      });
       storiesControlPanel.add(deleteStoryButton);
 
       storiesPanel.add(storiesControlPanel, java.awt.BorderLayout.SOUTH);
@@ -227,29 +242,14 @@ public class DatabaseEditorJFrame
 
       audioStoriesPanel.setLayout(new java.awt.BorderLayout());
 
-      audioStoriesTable.setModel(this.audioStoryTableModel);
       audioStoriesScrollPane.setViewportView(audioStoriesTable);
 
       audioStoriesPanel.add(audioStoriesScrollPane, java.awt.BorderLayout.CENTER);
 
       insertAudioStoryButton.setText(Utilities.getString("Insert")); // NOI18N
-      insertAudioStoryButton.addActionListener(new java.awt.event.ActionListener()
-      {
-         public void actionPerformed(java.awt.event.ActionEvent evt)
-         {
-            insertAudioStoryButtonActionPerformed(evt);
-         }
-      });
       audioStoriesControlPanel.add(insertAudioStoryButton);
 
       deleteAudioStoryButton.setText(Utilities.getString("Delete")); // NOI18N
-      deleteAudioStoryButton.addActionListener(new java.awt.event.ActionListener()
-      {
-         public void actionPerformed(java.awt.event.ActionEvent evt)
-         {
-            deleteAudioStoryButtonActionPerformed(evt);
-         }
-      });
       audioStoriesControlPanel.add(deleteAudioStoryButton);
 
       audioStoriesPanel.add(audioStoriesControlPanel, java.awt.BorderLayout.SOUTH);
@@ -278,31 +278,30 @@ public class DatabaseEditorJFrame
    {//GEN-HEADEREND:event_deleteLocationButtonActionPerformed
 		int row = this.locationsTable.getSelectedRow ();
 		if (row != -1) {
-			this.database.removeLocation (this.locationTableModel.getLocation (row));
+			this.database.deleteLocation (this.locationTableModel.getLocation (row));
 			this.locationTableModel.fireTableRowsDeleted (row, row);
 		}
    }//GEN-LAST:event_deleteLocationButtonActionPerformed
 
-   private void insertAudioStoryButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_insertAudioStoryButtonActionPerformed
-   {//GEN-HEADEREND:event_insertAudioStoryButtonActionPerformed
+   private void insertStoryButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_insertStoryButtonActionPerformed
+   {//GEN-HEADEREND:event_insertStoryButtonActionPerformed
 		Collection<Location> ls = this.database.getLocations ();
 		Location l = ls.iterator ().next ();
-		this.database.insertAudioStory (l, "new title", "file.mp3");
+		this.database.insertStory (l, "new title", "file.mp3", "transcription");
 		this.storyTableModel.fireTableDataChanged ();
 		int row = ls.size ();
-		this.audioStoryTableModel.fireTableRowsInserted (row, row);
-   }//GEN-LAST:event_insertAudioStoryButtonActionPerformed
+		this.storyTableModel.fireTableRowsInserted (row, row);
+   }//GEN-LAST:event_insertStoryButtonActionPerformed
 
-   private void deleteAudioStoryButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deleteAudioStoryButtonActionPerformed
-   {//GEN-HEADEREND:event_deleteAudioStoryButtonActionPerformed
-		int row = this.audioStoriesTable.getSelectedRow ();
+   private void deleteStoryButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deleteStoryButtonActionPerformed
+   {//GEN-HEADEREND:event_deleteStoryButtonActionPerformed
+		int row = this.storiesTable.getSelectedRow ();
 		if (row != -1) {
-			AudioStory as = this.audioStoryTableModel.getAudioStory (row);
-			this.database.deleteAudioStory (as);
-			this.audioStoryTableModel.fireTableRowsDeleted (row, row);
-			this.storyTableModel.fireTableDataChanged ();
+			Story as = this.storyTableModel.getStory (row);
+			this.database.deleteStory (as);
+			this.storyTableModel.fireTableRowsDeleted (row, row);
 		}
-   }//GEN-LAST:event_deleteAudioStoryButtonActionPerformed
+   }//GEN-LAST:event_deleteStoryButtonActionPerformed
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
    private javax.swing.JTable audioStoriesTable;
@@ -321,13 +320,13 @@ public class DatabaseEditorJFrame
 		LinkedList<Marker> markers = new LinkedList<> ();
 		float center_latitude = 0, center_longitude = 0;
 		for (Location l : this.database.getLocations ()) {
-			center_latitude += l.latitude;
-			center_longitude += l.longitude;
-			LatLong ll = new LatLong (l.latitude, l.longitude);
+			center_latitude += l.getLatitude ();
+			center_longitude += l.getLongitude ();
+			LatLong ll = new LatLong (l.getLatitude (), l.getLongitude ());
 			MarkerOptions markerOptions = new MarkerOptions ();
 			markerOptions
 			  .position (ll)
-			  .title (l.name)
+			  .title (l.getName ())
 			  .visible (true)
 			;
 			markers.add (new Marker (markerOptions));
@@ -420,7 +419,7 @@ class LocationInComboboxRenderer
 	public Component getListCellRendererComponent (JList list, Object value, int index, boolean isSelected, boolean cellHasFocus)
 	{
 		Location l = (Location) value;
-		return super.getListCellRendererComponent (list, l.name, index, isSelected, cellHasFocus);
+		return super.getListCellRendererComponent (list, l.getName (), index, isSelected, cellHasFocus);
 	}
 }
 
@@ -431,6 +430,6 @@ class LocationInTableRenderer
 	public void setValue (Object value)
 	{
 		Location l = (Location) value;
-		this.setText (l.name);
+		this.setText (l.getName ());
 	}
 }

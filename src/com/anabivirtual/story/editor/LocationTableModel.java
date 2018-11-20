@@ -46,13 +46,13 @@ final public class LocationTableModel
 		Location location = this.getLocation (rowIndex);
 		switch (Column.values () [columnIndex]) {
 			case ID:
-				return location.ID;
+				return location.getID ();
 			case LATITUDE:
-				return location.latitude;
+				return location.getLatitude ();
 			case LONGITUDE:
-				return location.longitude;
+				return location.getLongitude ();
 			case NAME:
-				return location.name;
+				return location.getName ();
 		}
 		throw new Error ("Not reachable");
 	}
@@ -95,32 +95,35 @@ final public class LocationTableModel
 	public void setValueAt (Object aValue, int rowIndex, int columnIndex)
 	{
 		Location l = this.getLocation (rowIndex);
+		boolean updated = false;
 		switch (Column.values () [columnIndex]) {
 			case ID:
 				return ;
 			case LATITUDE:
-				if (l.latitude != (Double) aValue) {
-					l.latitude = (Double) aValue;
-					this.database.updateLocation (l);
-					this.fireTableCellUpdated (rowIndex, columnIndex);
+				if (l.getLatitude () != (Double) aValue) {
+					l.setLatitude ((Double) aValue);
+					updated = true;
 				}
-				return ;
+				break ;
 			case LONGITUDE:
-				if (l.longitude != (Double) aValue) {
-					l.longitude = (Double) aValue;
-					this.database.updateLocation (l);
-					this.fireTableCellUpdated (rowIndex, columnIndex);
+				if (l.getLongitude () != (Double) aValue) {
+					l.setLongitude ((Double) aValue);
+					updated = true;
 				}
-				return ;
+				break ;
 			case NAME:
-				if (l.name.compareTo ((String) aValue) != 0) {
-					l.name = (String) aValue;
-					this.database.updateLocation (l);
-					this.fireTableCellUpdated (rowIndex, columnIndex);
+				if (l.getName ().compareTo ((String) aValue) != 0) {
+					l.setName ((String) aValue);
+					updated = true;
 				}
-				return ;
+				break ;
+			default:
+				throw new Error ("Not reachable");
 		}
-		throw new Error ("Not reachable");
+		if (updated) {
+			this.database.updateLocation (l);
+			this.fireTableCellUpdated (rowIndex, columnIndex);
+		}
 	}
 
 	Location getLocation (int rowIndex)

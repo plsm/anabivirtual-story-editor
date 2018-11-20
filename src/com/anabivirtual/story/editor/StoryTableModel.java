@@ -1,7 +1,7 @@
 package com.anabivirtual.story.editor;
 
 import com.anabivirtual.story.db.JDBCDatabase;
-import com.anabivirtual.story.db.AbstractStory;
+import com.anabivirtual.story.db.Story;
 import com.anabivirtual.story.db.Location;
 import java.util.Collection;
 
@@ -14,13 +14,15 @@ final public class StoryTableModel
 	  extends javax.swing.table.AbstractTableModel
 {
 	final private JDBCDatabase database;
-	final Collection<AbstractStory> stories;
-	final private RandomAccessIterator<AbstractStory> ci;
+	final Collection<Story> stories;
+	final private RandomAccessIterator<Story> ci;
 
 	enum Column {
 		ID,
 		TITLE,
-		LOCATION
+		LOCATION,
+		AUDIO_FILENAME,
+		TRANSCRIPTION
 	};
 	StoryTableModel (JDBCDatabase database)
 	{
@@ -43,14 +45,18 @@ final public class StoryTableModel
 	@Override
 	public Object getValueAt (int rowIndex, int columnIndex)
 	{
-		AbstractStory story = this.getStory (rowIndex);
+		Story story = this.getStory (rowIndex);
 		switch (Column.values () [columnIndex]) {
 			case ID:
-				return story.ID;
+				return story.getID ();
 			case TITLE:
-				return story.title;
+				return story.getTitle ();
 			case LOCATION:
-				return story.location;
+				return story.getLocation ();
+			case AUDIO_FILENAME:
+				return story.getAudioFilename ();
+			case TRANSCRIPTION:
+				return story.getTranscription ();
 		}
 		throw new Error ("Not reachable");
 	}
@@ -67,6 +73,8 @@ final public class StoryTableModel
 			case ID:
 				return Long.class;
 			case TITLE:
+			case AUDIO_FILENAME:
+			case TRANSCRIPTION:
 				return String.class;
 			case LOCATION:
 				return Location.class;
@@ -82,6 +90,8 @@ final public class StoryTableModel
 				return false;
 			case TITLE:
 			case LOCATION:
+			case AUDIO_FILENAME:
+			case TRANSCRIPTION:
 				return true;
 		}
 		throw new Error ("Not reachable");
@@ -90,29 +100,44 @@ final public class StoryTableModel
 	@Override
 	public void setValueAt (Object aValue, int rowIndex, int columnIndex)
 	{
-		AbstractStory aStory = this.getStory (rowIndex);
+		Story aStory = this.getStory (rowIndex);
+		boolean updated = false;
 		switch (Column.values () [columnIndex]) {
 			case ID:
 				return ;
 			case TITLE:
-				if (aStory.title.compareTo ((String) aValue) != 0) {
-					aStory.title = (String) aValue;
-					this.database.updateStory (aStory);
-					this.fireTableCellUpdated (rowIndex, columnIndex);
+				if (aStory.getTitle ().compareTo ((String) aValue) != 0) {
+					aStory.setTitle ((String) aValue);
+					updated = true;
 				}
-				return ;
+				break ;
 			case LOCATION:
-				if (aStory.location != (Location) aValue) {
-					aStory.location = (Location) aValue;
-					this.database.updateStory (aStory);
-					this.fireTableCellUpdated (rowIndex, columnIndex);
+				if (aStory.getLocation () != (Location) aValue) {
+					aStory.setLocation ((Location) aValue);
 				}
-				return ;
+				break ;
+			case AUDIO_FILENAME:
+				if (aStory.getAudioFilename ().compareTo ((String) aValue) != 0) {
+					aStory.setAudioFilename ((String) aValue);
+					updated = true;
+				}
+				break ;
+			case TRANSCRIPTION:
+				if (aStory.getTranscription ().compareTo ((String) aValue) != 0) {
+					aStory.setTranscription ((String) aValue);
+					updated = true;
+				}
+				break ;
+			default:
+				throw new Error ("Not reachable");
 		}
-		throw new Error ("Not reachable");
+		if (updated) {
+			this.database.updateStory (aStory);
+			this.fireTableCellUpdated (rowIndex, columnIndex);
+		}
 	}
 
-	AbstractStory getStory (int rowIndex)
+	Story getStory (int rowIndex)
 	{
 		return this.ci.getValueAt (rowIndex);
 	}

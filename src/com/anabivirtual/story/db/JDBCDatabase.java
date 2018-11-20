@@ -16,37 +16,25 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
  
 /**
  *
  * @author pedro
  */
 final public class JDBCDatabase
+  implements com.anabivirtual.story.core.Database<Location, Story, Place>
 {
 	private final Connection connection;
 	private final Map<Long, Location> locations;
-	private final Map<Long, AbstractStory> stories;
-	private final Map<Long, AudioStory> audios;
-	private final Map<Long, AudioBookStory> audioBooks;
-	private final Map<Long, HistoricalImageStory> historicalImages;
+	private final Map<Long, Story> stories;
+	private final Map<Long, Place> places;
 	private final Map<Long, BackgroundMusic> backgroundMusic;
 	JDBCDatabase (Connection connection)
 	{
 		this.connection = connection;
 		this.locations = this.readLocations ();
-		this.stories = new LinkedHashMap<> ();
-		this.audios = this.readAudioStories ();
-		this.audioBooks = this.readAudioBookStories ();
-		this.historicalImages = this.readHistoricalImageStories ();
-		BiConsumer<Long, ? super AbstractStory> bic = (Long k, AbstractStory s) -> {
-			JDBCDatabase.this.stories.put (k, s);
-		};
-		this.audios.forEach (bic);
-		this.audioBooks.forEach (bic);
-		this.historicalImages.forEach (bic);
+		this.stories = this.readStories ();
+		this.places = this.readPlaces ();
 		this.backgroundMusic = this.readBackgroundMusic ();
 	}
 	/**
@@ -64,9 +52,8 @@ final public class JDBCDatabase
 		}
 		this.locations.clear ();
 		this.stories.clear ();
-		this.audios.clear ();
-		this.audioBooks.clear ();
-		this.historicalImages.clear ();
+		this.places.clear ();
+		this.backgroundMusic.clear ();
 	}
 	static public JDBCDatabase createDatabase (String fileName)
 	{
@@ -88,7 +75,8 @@ final public class JDBCDatabase
 			return new JDBCDatabase (conn);
 		}
 		catch (SQLException ex) {
-			System.err.println (ex.getMessage());
+			ex.printStackTrace (System.err);
+			System.exit (1);
 			return null;
 		}
 	}
@@ -96,6 +84,9 @@ final public class JDBCDatabase
 	/**
 	 * Read the create-database.sql resource that contains the SQL data
 	 * definition commands.
+	 *
+	 * The {@code CREATE TABLE} and {@code CREATE VIEW} statements must be
+	 * separated by a single blank line.
 	 *
 	 * @return A collection of strings where each string corresponds
 	 * to a command from the DDL.
@@ -108,6 +99,7 @@ final public class JDBCDatabase
 		InputStream is = o.getClass ().getResourceAsStream ("/com/anabivirtual/story/db/sql/create-database.sql");
 		BufferedReader br = new BufferedReader (new InputStreamReader (is));
 		boolean eof = false;
+		boolean first_line_command = true;
 		do {
 			try {
 				String line = br.readLine ();
@@ -118,8 +110,15 @@ final public class JDBCDatabase
 				else if (line.isEmpty ()) {
 					result.add (createStatement.toString ());
 					createStatement = new StringBuilder ();
+					first_line_command = true;
 				}
 				else {
+					if (first_line_command) {
+						first_line_command = false;
+					}
+					else {
+						createStatement.append (' ');
+					}
 					createStatement.append (line);
 				}
 			}
@@ -146,6 +145,10 @@ final public class JDBCDatabase
 			return null;
 		}
 	}
+	/**
+	 * Read all rows from the {@code location} table in the database.
+	 * @return A map from location's keys to {@code Location} instances.
+	 */
 	private Map<Long, Location> readLocations ()
 	{
 		String sql = "SELECT * FROM location";
@@ -157,43 +160,38 @@ final public class JDBCDatabase
 		);
 		return toMap (sql, c2r);
 	}
-	private Map<Long, AudioStory> readAudioStories ()
-	{
-		String sql = "SELECT * FROM audio_story";
-		CursorToRecord<AudioStory> c2r = (ResultSet rs) -> new AudioStory (
-		  rs.getLong ("story_ID"),
-		  JDBCDatabase.this.locations.get (rs.getLong ("location_ID")),
-		  rs.getString ("title"),
-		  rs.getString ("filename")
-		);
-		return toMap (sql, c2r);
-	}
 	/**
-	 * Read the view {@code audio_book} and return a map containing
-	 * {@code AudioBookStory} instances.
+	 * Read all rows from the {@code view_story} view in the database and return
+	 * a map containing {@code Story} instances.
 	 *
-	 * @return a map containing {@code AudioBookStory} instances.
+	 * @return A map from story's primary keys to {@code Story} instances.
 	 */
-	private Map<Long, AudioBookStory> readAudioBookStories ()
+	private Map<Long, Story> readStories ()
 	{
-		String sql = "SELECT * FROM audio_book_story";
-		CursorToRecord<AudioBookStory> c2r = (ResultSet rs) -> new AudioBookStory (
+		String sql = "SELECT * FROM view_story";
+		CursorToRecord<Story> c2r = (ResultSet rs) -> new Story (
 		  rs.getLong ("story_ID"),
 		  JDBCDatabase.this.locations.get (rs.getLong ("location_ID")),
 		  rs.getString ("title"),
-		  rs.getString ("filename"),
+		  rs.getString ("audio_filename"),
 		  rs.getString ("transcription")
 		);
 		return toMap (sql, c2r);
 	}
-	private Map<Long, HistoricalImageStory> readHistoricalImageStories ()
+	/**
+	 * Read all rows from the {@code view_place} view in the database and return
+	 * a map containing {@code Place} instances.
+	 *
+	 * @return a map containing {@code Place} instances.
+	 */
+	private Map<Long, Place> readPlaces ()
 	{
-		String sql = "SELECT * from historical_image_story";
-		CursorToRecord<HistoricalImageStory> c2r = (ResultSet rs) -> new HistoricalImageStory (
-		  rs.getLong ("story_ID"),
+		String sql = "SELECT * FROM view_place";
+		CursorToRecord<Place> c2r = (ResultSet rs) -> new Place (
+		  rs.getLong ("place_ID"),
 		  JDBCDatabase.this.locations.get (rs.getLong ("location_ID")),
-		  rs.getString ("title"),
-		  rs.getString ("filename"));
+		  rs.getString ("image_filename")
+		);
 		return toMap (sql, c2r);
 	}
 	private Map<Long, BackgroundMusic> readBackgroundMusic ()
@@ -207,25 +205,20 @@ final public class JDBCDatabase
 		  rs.getDouble ("region_radius"));
 		return toMap (sql, c2r);
 	}
+	@Override
 	public Collection<Location> getLocations ()
 	{
 		return this.locations.values ();
 	}
-	public Collection<AbstractStory> getStories ()
+	@Override
+	public Collection<Story> getStories ()
 	{
 		return this.stories.values ();
 	}
-	public Collection<AudioStory> getAudioStories ()
+	@Override
+	public Collection<Place> getPlaces ()
 	{
-		return this.audios.values ();
-	}
-	public Collection<AudioBookStory> getAudioBookStories ()
-	{
-		return this.audioBooks.values ();
-	}
-	public Collection<HistoricalImageStory> getHistoricalImageStories ()
-	{
-		return this.historicalImages.values ();
+		return this.places.values ();
 	}
 	public Collection<BackgroundMusic> getBackgroundMusic ()
 	{
@@ -244,9 +237,8 @@ final public class JDBCDatabase
 	 */
 	public Location insertLocation (double latitude, double longitude, String name)
 	{
-		try {
-			String sql = "INSERT INTO location (latitude, longitude, name) VALUES (?, ?, ?)";
-			PreparedStatement ps = this.connection.prepareStatement (sql, Statement.RETURN_GENERATED_KEYS);
+		String sql = "INSERT INTO location (latitude, longitude, name) VALUES (?, ?, ?)";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql, Statement.RETURN_GENERATED_KEYS)) {
 			ps.setDouble (1, latitude);
 			ps.setDouble (2, longitude);
 			ps.setString (3, name);
@@ -273,17 +265,14 @@ final public class JDBCDatabase
 	 * @return {@code false} if an error occurred {@code true} otherwise.
 	 * @see #getLocations()
 	 */
-	public boolean removeLocation (Location location)
+	public boolean deleteLocation (Location location)
 	{
-		try {
-			String sql = "DELETE FROM location WHERE ID = ?";
-			PreparedStatement ps = this.connection.prepareStatement (sql);
-			ps.setLong (1, location.ID);
-			System.out.println (ps.toString ());
-			int rowCount = ps.executeUpdate ();
+		String sql = "DELETE FROM location WHERE ID = ?";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setLong (1, location.getID ());
+			ps.executeUpdate ();
 			ps.close ();
-			System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
-			this.locations.remove (location.ID);
+			this.locations.remove (location.getID ());
 			return true;
 		}
 		catch (SQLException ex) {
@@ -301,16 +290,14 @@ final public class JDBCDatabase
 	 */
 	public boolean updateLocation (Location location)
 	{
-		try {
-			String sql = "UPDATE location SET latitude = ?, longitude = ?, name = ? WHERE id = ?";
-			PreparedStatement ps = this.connection.prepareStatement (sql);
-			ps.setDouble (1, location.latitude);
-			ps.setDouble (2, location.longitude);
-			ps.setString (3, location.name);
-			ps.setLong (4, location.ID);
-			int rowCount = ps.executeUpdate ();
+		String sql = "UPDATE location SET latitude = ?, longitude = ?, name = ? WHERE id = ?";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setDouble (1, location.getLatitude ());
+			ps.setDouble (2, location.getLongitude ());
+			ps.setString (3, location.getName ());
+			ps.setLong (4, location.getID ());
+			ps.executeUpdate ();
 			ps.close ();
-			System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
 			return true;
 		}
 		catch (SQLException ex) {
@@ -320,225 +307,58 @@ final public class JDBCDatabase
 		}
 	}
 	//**************************************************************************
-	private long insertStory (Location location, String title)
+	public Story insertStory (Location location, String title, String filename, String transcription)
 	{
-		try {
-			String sql = "INSERT INTO story (title, location_ID) VALUES (?, ?)";
-			PreparedStatement ps = this.connection.prepareStatement (sql, Statement.RETURN_GENERATED_KEYS);
-			ps.setString (1, title);
-			ps.setLong (2, location.ID);
+		String sql = "INSERT INTO story (location_ID, title, audio_filename, transcription) VALUES (?, ?, ?, ?)";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setLong (1, location.getID ());
+			ps.setString (2, title);
+			ps.setString (3, filename);
+			ps.setString (4, transcription);
 			ps.executeUpdate ();
 			ResultSet rs = ps.getGeneratedKeys ();
 			rs.next ();
-			long result = rs.getLong (1);
+			long story_ID = rs.getLong (1);
 			ps.close ();
-			return result;
+			Story insertedStory = new Story (
+			  story_ID, location, title, filename, transcription);
+			this.stories.put (story_ID, insertedStory);
+			return insertedStory;
 		}
 		catch (SQLException ex) {
 			System.err.println ("Error inserting story");
-			System.err.println (ex.getMessage ());
 			ex.printStackTrace (System.err);
-			return -1;
+			return null;
 		}
 	}
-	private boolean removeStory (AbstractStory story)
+	public boolean deleteStory (Story story)
 	{
 		String sql = "DELETE FROM story WHERE ID = ?";
-		int rowCount;
 		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
-			ps.setLong (1, story.ID);
-			rowCount = ps.executeUpdate ();
+			ps.setLong (1, story.getID ());
+			ps.executeUpdate ();
 		}
 		catch (SQLException ex) {
 			System.err.println ("Error removing story");
 			ex.printStackTrace (System.err);
 			return false;
 		}
-		this.stories.remove (story.ID);
-		System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
+		this.stories.remove (story.getID ());
 		return true;
 	}
-	public boolean updateStory (AbstractStory story)
+	public boolean updateStory (Story story)
 	{
-		try {
-			String sql = "UPDATE story SET title = ?, location_ID = ? WHERE id = ?";
-			PreparedStatement ps = this.connection.prepareStatement (sql);
-			ps.setString (1, story.title);
-			ps.setLong (2, story.location.getID ());
-			ps.setLong (3, story.ID);
-			int rowCount = ps.executeUpdate ();
-			ps.close ();
-			System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
-			return true;
+		String sql = "UPDATE story SET title = ?, location_ID = ?, audio_filename = ?, transcription = ? WHERE ID = ?";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setString (1, story.getTitle ());
+			ps.setLong (2, story.getLocation ().getID ());
+			ps.setString (3, story.getAudioFilename ());
+			ps.setString (4, story.getTranscription ());
+			ps.setLong (5, story.getID ());
+			ps.executeUpdate ();
 		}
 		catch (SQLException ex) {
 			System.err.println ("Error updating story");
-			ex.printStackTrace (System.err);
-			return false;
-		}
-	}
-	//**************************************************************************
-	public AudioStory insertAudioStory (Location location, String title, String filename)
-	{
-		long story_ID = insertStory (location, title);
-		try {
-			String sql = "INSERT INTO audio (story_ID, filename) VALUES (?, ?)";
-			PreparedStatement ps = this.connection.prepareStatement (sql);
-			ps.setLong (1, story_ID);
-			ps.setString (2, filename);
-			ps.executeUpdate ();
-			ps.close ();
-			AudioStory insertedStory = new AudioStory (story_ID, location, title, filename);
-			this.stories.put (story_ID, insertedStory);
-			this.audios.put (story_ID, insertedStory);
-			return insertedStory;
-		}
-		catch (SQLException ex) {
-			System.err.println ("Error inserting audio");
-			System.err.println (ex.getMessage ());
-			ex.printStackTrace (System.err);
-			return null;
-		}
-	}
-	public boolean deleteAudioStory (AudioStory story)
-	{
-		String sql = "DELETE FROM audio WHERE story_ID = ?";
-		int rowCount;
-		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
-			ps.setLong (1, story.ID);
-			rowCount = ps.executeUpdate ();
-		}
-		catch (SQLException ex) {
-			System.err.println ("Error removing audio story");
-			ex.printStackTrace (System.err);
-			return false;
-		}
-		this.audios.remove (story.ID);
-		System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
-		return this.removeStory (story);
-	}
-	public boolean updateAudioStory (AudioStory story)
-	{
-		String sql;
-		PreparedStatement ps;
-		int rowCount;
-		try {
-			this.updateStory (story);
-			sql = "UPDATE audio SET filename = ? WHERE story_ID = ?";
-			ps = this.connection.prepareStatement (sql);
-			ps.setString (1, story.filename);
-			ps.setLong (2, story.ID);
-			rowCount = ps.executeUpdate ();
-			ps.close ();
-			System.out.println (String.format ("%d row(s) where affected by this SQL DML", rowCount));
-			return true;
-		}
-		catch (SQLException ex) {
-			System.err.println ("Error updating audio story");
-			ex.printStackTrace (System.err);
-			return false;
-		}
-	}
-	//**************************************************************************
-	public AudioBookStory insertAudioBookStory (Location location, String title, String filename, String transcription)
-	{
-		long story_ID = insertStory (location, title);
-		String sql = "INSERT INTO audio_book (story_ID, filename, transcription) VALUES (?, ?, ?)";
-		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
-			ps.setLong (1, story_ID);
-			ps.setString (2, filename);
-			ps.setString (3, transcription);
-			ps.executeUpdate ();
-		}
-		catch (SQLException ex) {
-			System.err.println ("Error inserting audio book");
-			ex.printStackTrace (System.err);
-			return null;
-		}
-		AudioBookStory insertedStory = new AudioBookStory (story_ID, location, title, filename, transcription);
-		this.stories.put (story_ID, insertedStory);
-		this.audioBooks.put (story_ID, insertedStory);
-		return insertedStory;
-	}
-	public boolean deleteAudioBookStory (AudioBookStory story)
-	{
-		String sql = "DELETE FROM audio_book WHERE story_ID = ?";
-		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
-			ps.setLong (1, story.ID);
-			ps.executeUpdate ();
-		}
-		catch (SQLException ex) {
-			System.err.println ("Error removing audio book story");
-			ex.printStackTrace (System.err);
-			return false;
-		}
-		this.audioBooks.remove (story.ID);
-		return this.removeStory (story);
-	}
-	public boolean updateAudioBookStory (AudioBookStory story)
-	{
-		this.updateStory (story);
-		String sql = "UPDATE audio_book SET filename = ?, transcription = ? WHERE story_ID = ?";
-		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
-			ps.setString (1, story.filename);
-			ps.setString (2, story.transcription);
-			ps.setLong (3, story.ID);
-			ps.executeUpdate ();
-		}
-		catch (SQLException ex) {
-			System.err.println ("Error updating audio book story");
-			ex.printStackTrace (System.err);
-			return false;
-		}
-		return true;
-	}
-	//**************************************************************************
-	public HistoricalImageStory insertHistoricalImageStory (Location location, String title, String filename)
-	{
-		long story_ID = this.insertStory (location, title);
-		String sql = "INSERT INTO historical_image (story_ID, filename) VALUES (?, ?)";
-		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
-			ps.setLong (1, story_ID);
-			ps.setString (2, filename);
-			ps.executeUpdate ();
-		}
-		catch (SQLException ex) {
-			System.err.println ("Error inserting historical image story");
-			ex.printStackTrace (System.err);
-			return null;
-		}
-		HistoricalImageStory insertedStory =
-		  new HistoricalImageStory (story_ID, location, title, filename);
-		this.stories.put (story_ID, insertedStory);
-		this.historicalImages.put (story_ID, insertedStory);
-		return insertedStory;
-	}
-	public boolean deleteHistoricalImageStory (HistoricalImageStory story)
-	{
-		String sql = "DELETE FROM historical_image WHERE story_ID = ?";
-		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
-			ps.setLong (1, story.ID);
-			ps.executeUpdate ();
-		}
-		catch (SQLException ex) {
-			System.err.println ("Error removing audio book story");
-			ex.printStackTrace (System.err);
-			return false;
-		}
-		this.historicalImages.remove (story.ID);
-		return this.removeStory (story);
-	}
-	public boolean updateHistoricalImageStory (HistoricalImageStory story)
-	{
-		this.updateStory (story);
-		String sql = "UPDATE historical_image SET filename = ? WHERE story_ID = ?";
-		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
-			ps.setString (1, story.filename);
-			ps.setLong (2, story.ID);
-			ps.executeUpdate ();
-		}
-		catch (SQLException ex) {
-			System.err.println ("Error updating historical image story");
 			ex.printStackTrace (System.err);
 			return false;
 		}
@@ -549,7 +369,7 @@ final public class JDBCDatabase
 	  double regionCenterLatitude, double regionCenterLongitude,
 	  double regionRadius)
 	{
-		String sql = "INSERT INTO background_music (filename, region_center_latitude, region_center_longitude, region_radius) VALUES (?, ?, ?, ?)";
+		String sql = "INSERT INTO background_music (audio_filename, region_center_latitude, region_center_longitude, region_radius) VALUES (?, ?, ?, ?)";
 		try (PreparedStatement ps = this.connection.prepareStatement (sql, Statement.RETURN_GENERATED_KEYS)) {
 			ps.setString (1, filename);
 			ps.setDouble (2, regionCenterLatitude);
@@ -592,9 +412,9 @@ final public class JDBCDatabase
 	}
 	public boolean updateBackgroundMusic (BackgroundMusic backgroundMusic)
 	{
-		String sql = "UPDATE background_music SET filename = ?, region_center_latitude = ?, region_center_longitude = ?, region_radius = ? WHERE ID = ?";
+		String sql = "UPDATE background_music SET audio_filename = ?, region_center_latitude = ?, region_center_longitude = ?, region_radius = ? WHERE ID = ?";
 		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
-			ps.setString (1, backgroundMusic.getFilename ());
+			ps.setString (1, backgroundMusic.getAudioFilename ());
 			ps.setDouble (2, backgroundMusic.getRegionCenterLatitude ());
 			ps.setDouble (3, backgroundMusic.getRegionCenterLongitude ());
 			ps.setDouble (4, backgroundMusic.getRegionRadius ());
