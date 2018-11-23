@@ -49,7 +49,6 @@ public class PlaceTableModel
 		this.database = database;
 		this.places = database.getPlaces ();
 		this.ci = new RandomAccessIterator<> (this.places);
-		
 	}
 	@Override
 	public int getRowCount ()

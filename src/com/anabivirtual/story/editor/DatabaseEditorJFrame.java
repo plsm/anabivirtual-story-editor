@@ -1,5 +1,6 @@
 package com.anabivirtual.story.editor;
 
+import com.anabivirtual.story.db.BackgroundMusic;
 import com.anabivirtual.story.db.Story;
 import com.anabivirtual.story.db.JDBCDatabase;
 import com.anabivirtual.story.db.Location;
@@ -42,6 +43,7 @@ public class DatabaseEditorJFrame
 	final LocationTableModel locationTableModel;
 	final StoryTableModel storyTableModel;
 	final PlaceTableModel placeTableModel;
+	final BackgroundMusicTableModel backgroundMusicTableModel;
 	private GoogleMapView gmc;
 	private GoogleMap map;
 	/**
@@ -63,10 +65,12 @@ public class DatabaseEditorJFrame
 		this.locationTableModel = new LocationTableModel (database);
 		this.storyTableModel = new StoryTableModel (database);
 		this.placeTableModel = new PlaceTableModel (database);
+		this.backgroundMusicTableModel = new BackgroundMusicTableModel (database);
 		initComponents ();
 		this.initLocationTable ();
 		this.initStoryTable ();
 		this.initPlaceTable ();
+		this.initBackgroundMusicTable ();
 		this.setTitle (String.format (Utilities.getString ("DatabaseEditorFrameTitle"), file.getAbsolutePath ()));
 		JFXPanel panel = new JFXPanel ();
 		Platform.runLater (new Runnable ()
@@ -125,6 +129,41 @@ public class DatabaseEditorJFrame
 		TableColumn filenameColumn = this.placesTable.getColumnModel ()
 		  .getColumn (PlaceTableModel.Column.IMAGE_FILENAME.ordinal ());
 		this.initAndroidResourceColumn (filenameColumn);
+	}
+	private void initBackgroundMusicTable ()
+	{
+		// audio filename
+		TableColumn audioFilenameColumn = this.backgroundMusicTable.getColumnModel ()
+		  .getColumn (BackgroundMusicTableModel.Column.AUDIO_FILENAME.ordinal ());
+		this.initAndroidResourceColumn (audioFilenameColumn);
+		// region center latitude
+		TableColumn latitudeColumn = this.backgroundMusicTable.getColumnModel ()
+		  .getColumn (BackgroundMusicTableModel.Column.REGION_CENTER_LATITUDE.ordinal ());
+		this.initLatitudeColumn (latitudeColumn);
+		// region center longitude
+		TableColumn longitudeColumn = this.backgroundMusicTable.getColumnModel ()
+		  .getColumn (BackgroundMusicTableModel.Column.REGION_CENTER_LONGITUDE.ordinal ());
+		this.initLongitudeColumn (longitudeColumn);
+	}
+	/**
+	 * Initialise the latitude column in a table in order to display a double
+	 * value in degrees, in the format xx° yy' zz'' N|S.
+	 *
+	 * @param latitudeColumn the latitude column of a {@code JTable}.
+	 */
+	private void initLatitudeColumn (TableColumn latitudeColumn)
+	{
+		latitudeColumn.setCellRenderer (new LatitudeRenderer ());
+	}
+	/**
+	 * Initalise the longitude column in a table in order to display a double
+	 * value in degrees, in the format xx° yy' zz'' W|E.
+	 *
+	 * @param longitudeColumn the longitude column of a {@code JTable}.
+	 */
+	private void initLongitudeColumn (TableColumn longitudeColumn)
+	{
+		longitudeColumn.setCellRenderer (new LongitudeRenderer ());
 	}
 	/**
 	 * Initialise the location column in a table in order to use a combo box to
@@ -187,6 +226,12 @@ public class DatabaseEditorJFrame
       javax.swing.JPanel placesControlPanel = new javax.swing.JPanel();
       javax.swing.JButton insertPlaceButton = new javax.swing.JButton();
       javax.swing.JButton deletePlaceButton = new javax.swing.JButton();
+      backgroundMusicPanel = new javax.swing.JPanel();
+      backgroundMusicScrollPane = new javax.swing.JScrollPane();
+      backgroundMusicTable = new javax.swing.JTable();
+      backgroundMusicControlPanel = new javax.swing.JPanel();
+      insertBackgroundMusicButton = new javax.swing.JButton();
+      deleteBackgroundMusicButton = new javax.swing.JButton();
       mapPanel = new javax.swing.JPanel();
 
       setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -290,6 +335,37 @@ public class DatabaseEditorJFrame
 
       databaseTabbedPane.addTab(Utilities.getString("Places"), placesPanel); // NOI18N
 
+      backgroundMusicPanel.setLayout(new java.awt.BorderLayout());
+
+      backgroundMusicTable.setModel(this.backgroundMusicTableModel);
+      backgroundMusicScrollPane.setViewportView(backgroundMusicTable);
+
+      backgroundMusicPanel.add(backgroundMusicScrollPane, java.awt.BorderLayout.CENTER);
+
+      insertBackgroundMusicButton.setText(Utilities.getString("Insert")); // NOI18N
+      insertBackgroundMusicButton.addActionListener(new java.awt.event.ActionListener()
+      {
+         public void actionPerformed(java.awt.event.ActionEvent evt)
+         {
+            insertBackgroundMusicButtonActionPerformed(evt);
+         }
+      });
+      backgroundMusicControlPanel.add(insertBackgroundMusicButton);
+
+      deleteBackgroundMusicButton.setText(Utilities.getString("Delete")); // NOI18N
+      deleteBackgroundMusicButton.addActionListener(new java.awt.event.ActionListener()
+      {
+         public void actionPerformed(java.awt.event.ActionEvent evt)
+         {
+            deleteBackgroundMusicButtonActionPerformed(evt);
+         }
+      });
+      backgroundMusicControlPanel.add(deleteBackgroundMusicButton);
+
+      backgroundMusicPanel.add(backgroundMusicControlPanel, java.awt.BorderLayout.SOUTH);
+
+      databaseTabbedPane.addTab(Utilities.getString("BackgroundMusic"), backgroundMusicPanel); // NOI18N
+
       mainSplitPane.setLeftComponent(databaseTabbedPane);
 
       mapPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -356,6 +432,24 @@ public class DatabaseEditorJFrame
 		}
    }//GEN-LAST:event_deletePlaceButtonActionPerformed
 
+   private void insertBackgroundMusicButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_insertBackgroundMusicButtonActionPerformed
+   {//GEN-HEADEREND:event_insertBackgroundMusicButtonActionPerformed
+		this.database.insertBackgroundMusic ("audio.mp3", DEFAULT_LATITUDE, DEFAULT_LONGITUDE, 1);
+		Collection bs = this.database.getBackgroundMusic ();
+		int row = bs.size ();
+		this.backgroundMusicTableModel.fireTableRowsInserted (row, row);
+   }//GEN-LAST:event_insertBackgroundMusicButtonActionPerformed
+
+   private void deleteBackgroundMusicButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deleteBackgroundMusicButtonActionPerformed
+   {//GEN-HEADEREND:event_deleteBackgroundMusicButtonActionPerformed
+      int row = this.backgroundMusicTable.getSelectedRow ();
+		if (row != -1) {
+			BackgroundMusic bm = this.backgroundMusicTableModel.getBackgroundMusic (row);
+			this.database.deleteBackgroundMusic (bm);
+			this.backgroundMusicTableModel.fireTableRowsDeleted (row, row);
+		}
+   }//GEN-LAST:event_deleteBackgroundMusicButtonActionPerformed
+
 	/**
 	 * Get a location to be used in inserted stories and places.
 	 *
@@ -368,8 +462,14 @@ public class DatabaseEditorJFrame
 	}
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
+   private javax.swing.JPanel backgroundMusicControlPanel;
+   private javax.swing.JPanel backgroundMusicPanel;
+   private javax.swing.JScrollPane backgroundMusicScrollPane;
+   private javax.swing.JTable backgroundMusicTable;
+   private javax.swing.JButton deleteBackgroundMusicButton;
    private javax.swing.JButton deleteLocationButton;
    private javax.swing.JButton deleteStoryButton;
+   private javax.swing.JButton insertBackgroundMusicButton;
    private javax.swing.JButton insertStoryButton;
    private javax.swing.JTable locationsTable;
    private javax.swing.JPanel mapPanel;
