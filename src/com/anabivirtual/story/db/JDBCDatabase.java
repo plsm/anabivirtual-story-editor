@@ -142,6 +142,7 @@ final public class JDBCDatabase
 		}
 		catch (SQLException ex) {
 			System.err.println (ex.getMessage ());
+			ex.printStackTrace (System.err);
 			return null;
 		}
 	}
@@ -199,7 +200,7 @@ final public class JDBCDatabase
 		String sql = "SELECT * FROM background_music";
 		CursorToRecord<BackgroundMusic> c2r = (ResultSet rs) -> new BackgroundMusic (
 		  rs.getLong ("ID"),
-		  rs.getString ("filename"),
+		  rs.getString ("audio_filename"),
 		  rs.getDouble ("region_center_latitude"),
 		  rs.getDouble ("region_center_longitude"),
 		  rs.getDouble ("region_radius"));
@@ -365,6 +366,60 @@ final public class JDBCDatabase
 		return true;
 	}
 	//**************************************************************************
+	public Place insertPlace (Location location, String image_filename)
+	{
+		String sql = "INSERT INTO place (location_ID, image_filename) VALUES (?, ?)";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setLong (1, location.getID ());
+			ps.setString (2, image_filename);
+			ps.executeUpdate ();
+			ResultSet rs = ps.getGeneratedKeys ();
+			rs.next ();
+			long place_ID = rs.getLong (1);
+			ps.close ();
+			Place insertedPlace = new Place (
+			  place_ID, location, image_filename);
+			this.places.put (place_ID, insertedPlace);
+			return insertedPlace;
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error inserting story");
+			ex.printStackTrace (System.err);
+			return null;
+		}
+	}
+	public boolean deletePlace (Place place)
+	{
+		String sql = "DELETE FROM place WHERE ID = ?";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setLong (1, place.getID ());
+			ps.executeUpdate ();
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error removing story");
+			ex.printStackTrace (System.err);
+			return false;
+		}
+		this.places.remove (place.getID ());
+		return true;
+	}
+	public boolean updatePlace (Place place)
+	{
+		String sql = "UPDATE place SET location_ID = ?, image_filename = ? WHERE ID = ?";
+		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
+			ps.setLong (1, place.getLocation ().getID ());
+			ps.setString (2, place.getImageFilename ());
+			ps.setLong (3, place.getID ());
+			ps.executeUpdate ();
+		}
+		catch (SQLException ex) {
+			System.err.println ("Error updating place");
+			ex.printStackTrace (System.err);
+			return false;
+		}
+		return true;
+	}
+	//**************************************************************************
 	public BackgroundMusic insertBackgroundMusic (String filename,
 	  double regionCenterLatitude, double regionCenterLongitude,
 	  double regionRadius)
@@ -423,7 +478,7 @@ final public class JDBCDatabase
 			ps.close ();
 		}
 		catch (SQLException ex) {
-			System.err.println ("Error while updating backgrund music " + backgroundMusic);
+			System.err.println ("Error while updating background music " + backgroundMusic);
 			ex.printStackTrace (System.err);
 			return false;
 		}
@@ -456,6 +511,7 @@ final public class JDBCDatabase
 		}
 		catch (SQLException ex) {
 			System.err.println (ex.getMessage ());
+			ex.printStackTrace (System.err);
 		}
 		return result;
 	}

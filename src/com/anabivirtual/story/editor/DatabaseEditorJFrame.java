@@ -3,6 +3,7 @@ package com.anabivirtual.story.editor;
 import com.anabivirtual.story.db.Story;
 import com.anabivirtual.story.db.JDBCDatabase;
 import com.anabivirtual.story.db.Location;
+import com.anabivirtual.story.db.Place;
 import com.lynden.gmapsfx.GoogleMapView;
 import com.lynden.gmapsfx.MapComponentInitializedListener;
 import com.lynden.gmapsfx.javascript.object.GoogleMap;
@@ -40,6 +41,7 @@ public class DatabaseEditorJFrame
 	final JDBCDatabase database;
 	final LocationTableModel locationTableModel;
 	final StoryTableModel storyTableModel;
+	final PlaceTableModel placeTableModel;
 	private GoogleMapView gmc;
 	private GoogleMap map;
 	/**
@@ -60,9 +62,11 @@ public class DatabaseEditorJFrame
 		this.database = database;
 		this.locationTableModel = new LocationTableModel (database);
 		this.storyTableModel = new StoryTableModel (database);
+		this.placeTableModel = new PlaceTableModel (database);
 		initComponents ();
 		this.initLocationTable ();
 		this.initStoryTable ();
+		this.initPlaceTable ();
 		this.setTitle (String.format (Utilities.getString ("DatabaseEditorFrameTitle"), file.getAbsolutePath ()));
 		JFXPanel panel = new JFXPanel ();
 		Platform.runLater (new Runnable ()
@@ -91,7 +95,7 @@ public class DatabaseEditorJFrame
 	}
 
 	/**
-	 * Initialise the audio story table to use a combo box to select locations,
+	 * Initialise the story table to use a combo box to select locations,
 	 * display location's name, and an android resource editor to verify audio
 	 * filenames.
 	 */
@@ -107,6 +111,21 @@ public class DatabaseEditorJFrame
 		this.initAndroidResourceColumn (filenameColumn);
 	}
 
+	/**
+	 * Initialise the place table to use a combo box to select locations, display
+	 * location's name, and an android resource editor to verify image filenames.
+	 */
+	private void initPlaceTable ()
+	{
+		// location column
+		TableColumn locationColumn = this.placesTable.getColumnModel ()
+		  .getColumn (PlaceTableModel.Column.LOCATION.ordinal ());
+		this.initLocationColumn (locationColumn);
+		// image filename column
+		TableColumn filenameColumn = this.placesTable.getColumnModel ()
+		  .getColumn (PlaceTableModel.Column.IMAGE_FILENAME.ordinal ());
+		this.initAndroidResourceColumn (filenameColumn);
+	}
 	/**
 	 * Initialise the location column in a table in order to use a combo box to
 	 * display available options and a renderer that shows location's name.
@@ -133,7 +152,7 @@ public class DatabaseEditorJFrame
 	private void initAndroidResourceColumn (TableColumn androidResourceColumn)
 	{
 		androidResourceColumn.setCellEditor (
-		  new AndroidResourceEditor (this.audioStoriesTable));
+		  new AndroidResourceEditor (this.placesTable));
 	}
 
     /** This method is called from within the constructor to
@@ -162,12 +181,12 @@ public class DatabaseEditorJFrame
       javax.swing.JPanel storiesControlPanel = new javax.swing.JPanel();
       insertStoryButton = new javax.swing.JButton();
       deleteStoryButton = new javax.swing.JButton();
-      javax.swing.JPanel audioStoriesPanel = new javax.swing.JPanel();
-      javax.swing.JScrollPane audioStoriesScrollPane = new javax.swing.JScrollPane();
-      audioStoriesTable = new javax.swing.JTable();
-      javax.swing.JPanel audioStoriesControlPanel = new javax.swing.JPanel();
-      javax.swing.JButton insertAudioStoryButton = new javax.swing.JButton();
-      javax.swing.JButton deleteAudioStoryButton = new javax.swing.JButton();
+      javax.swing.JPanel placesPanel = new javax.swing.JPanel();
+      javax.swing.JScrollPane placesScrollPane = new javax.swing.JScrollPane();
+      placesTable = new javax.swing.JTable();
+      javax.swing.JPanel placesControlPanel = new javax.swing.JPanel();
+      javax.swing.JButton insertPlaceButton = new javax.swing.JButton();
+      javax.swing.JButton deletePlaceButton = new javax.swing.JButton();
       mapPanel = new javax.swing.JPanel();
 
       setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -240,21 +259,36 @@ public class DatabaseEditorJFrame
 
       databaseTabbedPane.addTab(Utilities.getString("Stories"), storiesPanel); // NOI18N
 
-      audioStoriesPanel.setLayout(new java.awt.BorderLayout());
+      placesPanel.setLayout(new java.awt.BorderLayout());
 
-      audioStoriesScrollPane.setViewportView(audioStoriesTable);
+      placesTable.setModel(this.placeTableModel);
+      placesScrollPane.setViewportView(placesTable);
 
-      audioStoriesPanel.add(audioStoriesScrollPane, java.awt.BorderLayout.CENTER);
+      placesPanel.add(placesScrollPane, java.awt.BorderLayout.CENTER);
 
-      insertAudioStoryButton.setText(Utilities.getString("Insert")); // NOI18N
-      audioStoriesControlPanel.add(insertAudioStoryButton);
+      insertPlaceButton.setText(Utilities.getString("Insert")); // NOI18N
+      insertPlaceButton.addActionListener(new java.awt.event.ActionListener()
+      {
+         public void actionPerformed(java.awt.event.ActionEvent evt)
+         {
+            insertPlaceButtonActionPerformed(evt);
+         }
+      });
+      placesControlPanel.add(insertPlaceButton);
 
-      deleteAudioStoryButton.setText(Utilities.getString("Delete")); // NOI18N
-      audioStoriesControlPanel.add(deleteAudioStoryButton);
+      deletePlaceButton.setText(Utilities.getString("Delete")); // NOI18N
+      deletePlaceButton.addActionListener(new java.awt.event.ActionListener()
+      {
+         public void actionPerformed(java.awt.event.ActionEvent evt)
+         {
+            deletePlaceButtonActionPerformed(evt);
+         }
+      });
+      placesControlPanel.add(deletePlaceButton);
 
-      audioStoriesPanel.add(audioStoriesControlPanel, java.awt.BorderLayout.SOUTH);
+      placesPanel.add(placesControlPanel, java.awt.BorderLayout.SOUTH);
 
-      databaseTabbedPane.addTab(Utilities.getString("AudioStories"), audioStoriesPanel); // NOI18N
+      databaseTabbedPane.addTab(Utilities.getString("Places"), placesPanel); // NOI18N
 
       mainSplitPane.setLeftComponent(databaseTabbedPane);
 
@@ -303,14 +337,44 @@ public class DatabaseEditorJFrame
 		}
    }//GEN-LAST:event_deleteStoryButtonActionPerformed
 
+   private void insertPlaceButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_insertPlaceButtonActionPerformed
+   {//GEN-HEADEREND:event_insertPlaceButtonActionPerformed
+		Location l = this.getDefaultLocation ();
+		this.database.insertPlace (l, "image.png");
+		Collection<Place> ps = this.database.getPlaces ();
+		int row = ps.size ();
+		this.placeTableModel.fireTableRowsInserted (row, row);
+   }//GEN-LAST:event_insertPlaceButtonActionPerformed
+
+   private void deletePlaceButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deletePlaceButtonActionPerformed
+   {//GEN-HEADEREND:event_deletePlaceButtonActionPerformed
+		int row = this.placesTable.getSelectedRow ();
+		if (row != -1) {
+			Place p = this.placeTableModel.getPlace (row);
+			this.database.deletePlace (p);
+			this.placeTableModel.fireTableRowsDeleted (row, row);
+		}
+   }//GEN-LAST:event_deletePlaceButtonActionPerformed
+
+	/**
+	 * Get a location to be used in inserted stories and places.
+	 *
+	 * @return a location to be used in inserted stories and places.
+	 */
+	private Location getDefaultLocation ()
+	{
+		Collection<Location> ls = this.database.getLocations ();
+		return ls.iterator ().next ();
+	}
+
    // Variables declaration - do not modify//GEN-BEGIN:variables
-   private javax.swing.JTable audioStoriesTable;
    private javax.swing.JButton deleteLocationButton;
    private javax.swing.JButton deleteStoryButton;
    private javax.swing.JButton insertStoryButton;
    private javax.swing.JTable locationsTable;
    private javax.swing.JPanel mapPanel;
    private javax.swing.JButton newLocationButton;
+   private javax.swing.JTable placesTable;
    private javax.swing.JTable storiesTable;
    // End of variables declaration//GEN-END:variables
 
