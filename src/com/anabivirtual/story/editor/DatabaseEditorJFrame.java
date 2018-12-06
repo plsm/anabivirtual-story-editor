@@ -4,7 +4,7 @@ import com.anabivirtual.story.db.BackgroundMusic;
 import com.anabivirtual.story.db.Story;
 import com.anabivirtual.story.db.JDBCDatabase;
 import com.anabivirtual.story.db.Location;
-import com.anabivirtual.story.db.Place;
+import com.anabivirtual.story.db.PointOfInterest;
 import com.lynden.gmapsfx.GoogleMapView;
 import com.lynden.gmapsfx.MapComponentInitializedListener;
 import com.lynden.gmapsfx.javascript.object.GoogleMap;
@@ -42,7 +42,7 @@ public class DatabaseEditorJFrame
 	final JDBCDatabase database;
 	final LocationTableModel locationTableModel;
 	final StoryTableModel storyTableModel;
-	final PlaceTableModel placeTableModel;
+	final PointOfInterestTableModel pointOfInterestTableModel;
 	final BackgroundMusicTableModel backgroundMusicTableModel;
 	private GoogleMapView gmc;
 	private GoogleMap map;
@@ -64,12 +64,12 @@ public class DatabaseEditorJFrame
 		this.database = database;
 		this.locationTableModel = new LocationTableModel (database);
 		this.storyTableModel = new StoryTableModel (database);
-		this.placeTableModel = new PlaceTableModel (database);
+		this.pointOfInterestTableModel = new PointOfInterestTableModel (database);
 		this.backgroundMusicTableModel = new BackgroundMusicTableModel (database);
 		initComponents ();
 		this.initLocationTable ();
 		this.initStoryTable ();
-		this.initPlaceTable ();
+		this.initPointOfInterestTable ();
 		this.initBackgroundMusicTable ();
 		this.setTitle (String.format (Utilities.getString ("DatabaseEditorFrameTitle"), file.getAbsolutePath ()));
 		JFXPanel panel = new JFXPanel ();
@@ -116,18 +116,19 @@ public class DatabaseEditorJFrame
 	}
 
 	/**
-	 * Initialise the place table to use a combo box to select locations, display
-	 * location's name, and an android resource editor to verify image filenames.
+	 * Initialise the points of interest table to use a combo box to select
+	 * locations, display location's name, and an android resource editor to
+	 * verify image filenames.
 	 */
-	private void initPlaceTable ()
+	private void initPointOfInterestTable ()
 	{
 		// location column
-		TableColumn locationColumn = this.placesTable.getColumnModel ()
-		  .getColumn (PlaceTableModel.Column.LOCATION.ordinal ());
+		TableColumn locationColumn = this.pointsOfInterestTable.getColumnModel ()
+		  .getColumn (PointOfInterestTableModel.Column.LOCATION.ordinal ());
 		this.initLocationColumn (locationColumn);
 		// image filename column
-		TableColumn filenameColumn = this.placesTable.getColumnModel ()
-		  .getColumn (PlaceTableModel.Column.IMAGE_FILENAME.ordinal ());
+		TableColumn filenameColumn = this.pointsOfInterestTable.getColumnModel ()
+		  .getColumn (PointOfInterestTableModel.Column.IMAGE_FILENAME.ordinal ());
 		this.initAndroidResourceColumn (filenameColumn);
 	}
 	private void initBackgroundMusicTable ()
@@ -191,7 +192,7 @@ public class DatabaseEditorJFrame
 	private void initAndroidResourceColumn (TableColumn androidResourceColumn)
 	{
 		androidResourceColumn.setCellEditor (
-		  new AndroidResourceEditor (this.placesTable));
+		  new AndroidResourceEditor (this.pointsOfInterestTable));
 	}
 
     /** This method is called from within the constructor to
@@ -220,12 +221,12 @@ public class DatabaseEditorJFrame
       javax.swing.JPanel storiesControlPanel = new javax.swing.JPanel();
       insertStoryButton = new javax.swing.JButton();
       deleteStoryButton = new javax.swing.JButton();
-      javax.swing.JPanel placesPanel = new javax.swing.JPanel();
-      javax.swing.JScrollPane placesScrollPane = new javax.swing.JScrollPane();
-      placesTable = new javax.swing.JTable();
-      javax.swing.JPanel placesControlPanel = new javax.swing.JPanel();
-      javax.swing.JButton insertPlaceButton = new javax.swing.JButton();
-      javax.swing.JButton deletePlaceButton = new javax.swing.JButton();
+      javax.swing.JPanel pointsOfInterestPanel = new javax.swing.JPanel();
+      javax.swing.JScrollPane pointsOfInterestScrollPane = new javax.swing.JScrollPane();
+      pointsOfInterestTable = new javax.swing.JTable();
+      javax.swing.JPanel pointsOfInterestControlPanel = new javax.swing.JPanel();
+      javax.swing.JButton insertPointOfInterestButton = new javax.swing.JButton();
+      javax.swing.JButton deletePointOfInterestButton = new javax.swing.JButton();
       backgroundMusicPanel = new javax.swing.JPanel();
       backgroundMusicScrollPane = new javax.swing.JScrollPane();
       backgroundMusicTable = new javax.swing.JTable();
@@ -304,36 +305,36 @@ public class DatabaseEditorJFrame
 
       databaseTabbedPane.addTab(Utilities.getString("Stories"), storiesPanel); // NOI18N
 
-      placesPanel.setLayout(new java.awt.BorderLayout());
+      pointsOfInterestPanel.setLayout(new java.awt.BorderLayout());
 
-      placesTable.setModel(this.placeTableModel);
-      placesScrollPane.setViewportView(placesTable);
+      pointsOfInterestTable.setModel(this.pointOfInterestTableModel);
+      pointsOfInterestScrollPane.setViewportView(pointsOfInterestTable);
 
-      placesPanel.add(placesScrollPane, java.awt.BorderLayout.CENTER);
+      pointsOfInterestPanel.add(pointsOfInterestScrollPane, java.awt.BorderLayout.CENTER);
 
-      insertPlaceButton.setText(Utilities.getString("Insert")); // NOI18N
-      insertPlaceButton.addActionListener(new java.awt.event.ActionListener()
+      insertPointOfInterestButton.setText(Utilities.getString("Insert")); // NOI18N
+      insertPointOfInterestButton.addActionListener(new java.awt.event.ActionListener()
       {
          public void actionPerformed(java.awt.event.ActionEvent evt)
          {
-            insertPlaceButtonActionPerformed(evt);
+            insertPointOfInterestButtonActionPerformed(evt);
          }
       });
-      placesControlPanel.add(insertPlaceButton);
+      pointsOfInterestControlPanel.add(insertPointOfInterestButton);
 
-      deletePlaceButton.setText(Utilities.getString("Delete")); // NOI18N
-      deletePlaceButton.addActionListener(new java.awt.event.ActionListener()
+      deletePointOfInterestButton.setText(Utilities.getString("Delete")); // NOI18N
+      deletePointOfInterestButton.addActionListener(new java.awt.event.ActionListener()
       {
          public void actionPerformed(java.awt.event.ActionEvent evt)
          {
-            deletePlaceButtonActionPerformed(evt);
+            deletePointOfInterestButtonActionPerformed(evt);
          }
       });
-      placesControlPanel.add(deletePlaceButton);
+      pointsOfInterestControlPanel.add(deletePointOfInterestButton);
 
-      placesPanel.add(placesControlPanel, java.awt.BorderLayout.SOUTH);
+      pointsOfInterestPanel.add(pointsOfInterestControlPanel, java.awt.BorderLayout.SOUTH);
 
-      databaseTabbedPane.addTab(Utilities.getString("Places"), placesPanel); // NOI18N
+      databaseTabbedPane.addTab(Utilities.getString("PointsOfInterest"), pointsOfInterestPanel); // NOI18N
 
       backgroundMusicPanel.setLayout(new java.awt.BorderLayout());
 
@@ -413,24 +414,24 @@ public class DatabaseEditorJFrame
 		}
    }//GEN-LAST:event_deleteStoryButtonActionPerformed
 
-   private void insertPlaceButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_insertPlaceButtonActionPerformed
-   {//GEN-HEADEREND:event_insertPlaceButtonActionPerformed
+   private void insertPointOfInterestButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_insertPointOfInterestButtonActionPerformed
+   {//GEN-HEADEREND:event_insertPointOfInterestButtonActionPerformed
 		Location l = this.getDefaultLocation ();
-		this.database.insertPlace (l, "image.png");
-		Collection<Place> ps = this.database.getPlaces ();
+		this.database.insertPointOfInterest (l, "image.png", "audio.mp3", "transcription");
+		Collection ps = this.database.getPointsOfInterest ();
 		int row = ps.size ();
-		this.placeTableModel.fireTableRowsInserted (row, row);
-   }//GEN-LAST:event_insertPlaceButtonActionPerformed
+		this.pointOfInterestTableModel.fireTableRowsInserted (row, row);
+   }//GEN-LAST:event_insertPointOfInterestButtonActionPerformed
 
-   private void deletePlaceButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deletePlaceButtonActionPerformed
-   {//GEN-HEADEREND:event_deletePlaceButtonActionPerformed
-		int row = this.placesTable.getSelectedRow ();
+   private void deletePointOfInterestButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deletePointOfInterestButtonActionPerformed
+   {//GEN-HEADEREND:event_deletePointOfInterestButtonActionPerformed
+		int row = this.pointsOfInterestTable.getSelectedRow ();
 		if (row != -1) {
-			Place p = this.placeTableModel.getPlace (row);
-			this.database.deletePlace (p);
-			this.placeTableModel.fireTableRowsDeleted (row, row);
+			PointOfInterest p = this.pointOfInterestTableModel.getPointOfInterest (row);
+			this.database.deletePointOfInterest (p);
+			this.pointOfInterestTableModel.fireTableRowsDeleted (row, row);
 		}
-   }//GEN-LAST:event_deletePlaceButtonActionPerformed
+   }//GEN-LAST:event_deletePointOfInterestButtonActionPerformed
 
    private void insertBackgroundMusicButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_insertBackgroundMusicButtonActionPerformed
    {//GEN-HEADEREND:event_insertBackgroundMusicButtonActionPerformed
@@ -474,7 +475,7 @@ public class DatabaseEditorJFrame
    private javax.swing.JTable locationsTable;
    private javax.swing.JPanel mapPanel;
    private javax.swing.JButton newLocationButton;
-   private javax.swing.JTable placesTable;
+   private javax.swing.JTable pointsOfInterestTable;
    private javax.swing.JTable storiesTable;
    // End of variables declaration//GEN-END:variables
 

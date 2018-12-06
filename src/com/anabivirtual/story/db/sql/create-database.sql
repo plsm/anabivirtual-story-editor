@@ -16,9 +16,11 @@ CREATE TABLE story (
   FOREIGN KEY (location_ID) REFERENCES location (ID) ON DELETE CASCADE
 );
 
-CREATE TABLE place (
+CREATE TABLE point_of_interest (
   ID INTEGER PRIMARY KEY ASC NOT NULL,
-  image_filename TEXT NOT NULL,
+  audio_filename TEXT NOT NULL,
+  transcription TEXT NOT NULL,
+  image_filename TEXT,
   location_ID INT NOT NULL,
   FOREIGN KEY (location_ID) REFERENCES location (ID) ON DELETE CASCADE
 );
@@ -55,19 +57,23 @@ CREATE VIEW view_story (
   FROM location
   INNER JOIN story ON location.ID = story.location_ID;
 
-CREATE VIEW view_place (
+CREATE VIEW view_point_of_interest (
   location_ID,
-  place_ID,
+  point_of_interest_ID,
   latitude,
   longitude,
   location_name,
-  image_filename
+  image_filename,
+  audio_filename,
+  transcription
 ) AS SELECT
   location.ID,
-  place.ID,
+  point_of_interest.ID,
   location.latitude,
   location.longitude,
   location.name,
-  place.image_filename
+  point_of_interest.image_filename,
+  point_of_interest.audio_filename,
+  point_of_interest.transcription
   FROM location
-  INNER JOIN place ON location.ID = place.location_ID;  
+  INNER JOIN point_of_interest ON location.ID = point_of_interest.location_ID;  

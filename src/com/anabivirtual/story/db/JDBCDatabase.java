@@ -22,19 +22,19 @@ import java.util.Map;
  * @author pedro
  */
 final public class JDBCDatabase
-  implements com.anabivirtual.story.core.Database<Location, Story, Place>
+  implements com.anabivirtual.story.core.Database<Location, Story, PointOfInterest, BackgroundMusic>
 {
 	private final Connection connection;
 	private final Map<Long, Location> locations;
 	private final Map<Long, Story> stories;
-	private final Map<Long, Place> places;
+	private final Map<Long, PointOfInterest> pointsOfInterest;
 	private final Map<Long, BackgroundMusic> backgroundMusic;
 	JDBCDatabase (Connection connection)
 	{
 		this.connection = connection;
 		this.locations = this.readLocations ();
 		this.stories = this.readStories ();
-		this.places = this.readPlaces ();
+		this.pointsOfInterest = this.readPointsOfInterest ();
 		this.backgroundMusic = this.readBackgroundMusic ();
 	}
 	/**
@@ -52,7 +52,7 @@ final public class JDBCDatabase
 		}
 		this.locations.clear ();
 		this.stories.clear ();
-		this.places.clear ();
+		this.pointsOfInterest.clear ();
 		this.backgroundMusic.clear ();
 	}
 	static public JDBCDatabase createDatabase (String fileName)
@@ -68,6 +68,7 @@ final public class JDBCDatabase
 			System.out.println ("A new database has been created.");
 			// SQLite connection string
 			for (String createTable : readCreateDatabaseResource ()) {
+				System.out.println (String.format ("Executing string [%s]", createTable));
 				Statement stmt = conn.createStatement ();
 				stmt.execute (createTable);
 				stmt.close ();
@@ -180,18 +181,20 @@ final public class JDBCDatabase
 		return toMap (sql, c2r);
 	}
 	/**
-	 * Read all rows from the {@code view_place} view in the database and return
-	 * a map containing {@code Place} instances.
+	 * Read all rows from the {@code view_point_of_interest} view in the database
+	 * and return a map containing {@code PointOfInterest} instances.
 	 *
-	 * @return a map containing {@code Place} instances.
+	 * @return a map containing {@code PointOfInterest} instances.
 	 */
-	private Map<Long, Place> readPlaces ()
+	private Map<Long, PointOfInterest> readPointsOfInterest ()
 	{
-		String sql = "SELECT * FROM view_place";
-		CursorToRecord<Place> c2r = (ResultSet rs) -> new Place (
-		  rs.getLong ("place_ID"),
+		String sql = "SELECT * FROM view_point_of_interest";
+		CursorToRecord<PointOfInterest> c2r = (ResultSet rs) -> new PointOfInterest (
+		  rs.getLong ("point_of_interest_ID"),
 		  JDBCDatabase.this.locations.get (rs.getLong ("location_ID")),
-		  rs.getString ("image_filename")
+		  rs.getString ("image_filename"),
+		  rs.getString ("audio_filename"),
+		  rs.getString ("transcription")
 		);
 		return toMap (sql, c2r);
 	}
@@ -217,10 +220,11 @@ final public class JDBCDatabase
 		return this.stories.values ();
 	}
 	@Override
-	public Collection<Place> getPlaces ()
+	public Collection<PointOfInterest> getPointsOfInterest ()
 	{
-		return this.places.values ();
+		return this.pointsOfInterest.values ();
 	}
+	@Override
 	public Collection<BackgroundMusic> getBackgroundMusic ()
 	{
 		return this.backgroundMusic.values ();
@@ -366,54 +370,72 @@ final public class JDBCDatabase
 		return true;
 	}
 	//**************************************************************************
-	public Place insertPlace (Location location, String image_filename)
+	public PointOfInterest insertPointOfInterest (Location location, String imageFilename, String audioFilename, String audioTranscription)
 	{
-		String sql = "INSERT INTO place (location_ID, image_filename) VALUES (?, ?)";
+		String sql;
+		if (imageFilename == null) 
+			sql = "INSERT INTO point_of_interest (location_ID, audio_filename, transcription) VALUES (?, ?, ?)";
+		else
+			sql = "INSERT INTO point_of_interest (location_ID, audio_filename, transcription, image_filename) VALUES (?, ?, ?, ?)";
 		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
 			ps.setLong (1, location.getID ());
-			ps.setString (2, image_filename);
+			ps.setString (2, audioFilename);
+			ps.setString (3, audioTranscription);
+			if (imageFilename != null)
+				ps.setString (4, imageFilename);
 			ps.executeUpdate ();
 			ResultSet rs = ps.getGeneratedKeys ();
 			rs.next ();
-			long place_ID = rs.getLong (1);
+			long pointOfInterest_ID = rs.getLong (1);
 			ps.close ();
-			Place insertedPlace = new Place (
-			  place_ID, location, image_filename);
-			this.places.put (place_ID, insertedPlace);
-			return insertedPlace;
+			PointOfInterest insertedPointOfInterest = new PointOfInterest (
+			  pointOfInterest_ID, location, imageFilename,
+			  audioFilename, audioTranscription);
+			this.pointsOfInterest.put (pointOfInterest_ID, insertedPointOfInterest);
+			return insertedPointOfInterest;
 		}
 		catch (SQLException ex) {
-			System.err.println ("Error inserting story");
+			System.err.println ("Error inserting point of interest");
 			ex.printStackTrace (System.err);
 			return null;
 		}
 	}
-	public boolean deletePlace (Place place)
+	public boolean deletePointOfInterest (PointOfInterest pointOfInterest)
 	{
-		String sql = "DELETE FROM place WHERE ID = ?";
+		String sql = "DELETE FROM point_of_interest WHERE ID = ?";
 		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
-			ps.setLong (1, place.getID ());
+			ps.setLong (1, pointOfInterest.getID ());
 			ps.executeUpdate ();
 		}
 		catch (SQLException ex) {
-			System.err.println ("Error removing story");
+			System.err.println ("Error removing point of interest");
 			ex.printStackTrace (System.err);
 			return false;
 		}
-		this.places.remove (place.getID ());
+		this.pointsOfInterest.remove (pointOfInterest.getID ());
 		return true;
 	}
-	public boolean updatePlace (Place place)
+	public boolean updatePointOfInterest (PointOfInterest pointOfInterest)
 	{
-		String sql = "UPDATE place SET location_ID = ?, image_filename = ? WHERE ID = ?";
+		String sql;
+		if (pointOfInterest.hasImage ())
+			sql = "UPDATE point_of_interest SET location_ID = ?, audio_filename = ?, transcription = ?, image_filename = ? WHERE ID = ?";
+		else
+			sql = "UPDATE point_of_interest SET location_ID = ?, audio_filename = ?, transcription = ?, image_filename = NULL WHERE ID = ?";
 		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
-			ps.setLong (1, place.getLocation ().getID ());
-			ps.setString (2, place.getImageFilename ());
-			ps.setLong (3, place.getID ());
+			ps.setLong (1, pointOfInterest.getLocation ().getID ());
+			ps.setString (2, pointOfInterest.getAudioFilename ());
+			ps.setString (3, pointOfInterest.getTranscription ());
+			if (pointOfInterest.hasImage ()) {
+				ps.setString (4, pointOfInterest.getImageFilename ());
+				ps.setLong (5, pointOfInterest.getID ());
+			}
+			else
+				ps.setLong (4, pointOfInterest.getID ());
 			ps.executeUpdate ();
 		}
 		catch (SQLException ex) {
-			System.err.println ("Error updating place");
+			System.err.println ("Error updating point of interest");
 			ex.printStackTrace (System.err);
 			return false;
 		}

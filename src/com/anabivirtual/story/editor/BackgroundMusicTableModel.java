@@ -19,17 +19,17 @@ public class BackgroundMusicTableModel
 	 */
 	final private JDBCDatabase database;
 	/**
-	 * Collection of {@code Place} instances representing all the rows in the
-	 * {@code place} table.
+	 * Collection of {@code BackgroundMusic} instances representing all the rows in the
+	 * {@code background_music} table.
 	 */
 	final Collection<BackgroundMusic> backgroundMusic;
 	/**
-	 * The random access iterator to the {@code Place} collection.
+	 * The random access iterator to the {@code BackgroundMusic} collection.
 	 */
 	final private RandomAccessIterator<BackgroundMusic> ci;
 
 	/**
-	 * Columns in the place table.
+	 * Columns in the background music table.
 	 */
 	enum Column
 	{
@@ -41,7 +41,7 @@ public class BackgroundMusicTableModel
 	}
 	/**
 	 * Construct the table model that provides a connection between the
-	 * {@code place} table in the database and the {@code JTable}.
+	 * {@code background_music} table in the database and the {@code JTable}.
 	 *
 	 * @param database The database that is going to be edited.
 	 */
