@@ -113,6 +113,10 @@ public class DatabaseEditorJFrame
 		TableColumn filenameColumn = this.storiesTable.getColumnModel ()
 		  .getColumn (StoryTableModel.Column.AUDIO_FILENAME.ordinal ());
 		this.initAndroidResourceColumn (filenameColumn);
+		// audio transcription column
+		TableColumn audioTranscriptionColumn = this.storiesTable.getColumnModel ()
+		  .getColumn (StoryTableModel.Column.TRANSCRIPTION.ordinal ());
+		this.initMultiLineTextColumn (audioTranscriptionColumn);
 	}
 
 	/**
@@ -130,6 +134,10 @@ public class DatabaseEditorJFrame
 		TableColumn filenameColumn = this.pointsOfInterestTable.getColumnModel ()
 		  .getColumn (PointOfInterestTableModel.Column.IMAGE_FILENAME.ordinal ());
 		this.initAndroidResourceColumn (filenameColumn);
+		// audio transcription column
+		TableColumn audioTranscriptionColumn = this.pointsOfInterestTable.getColumnModel ()
+		  .getColumn (PointOfInterestTableModel.Column.TRANSCRIPTION.ordinal ());
+		this.initMultiLineTextColumn (audioTranscriptionColumn);
 	}
 	private void initBackgroundMusicTable ()
 	{
@@ -195,6 +203,17 @@ public class DatabaseEditorJFrame
 		  new AndroidResourceEditor (this.pointsOfInterestTable));
 	}
 
+	/**
+	 * Initialise a multi line text column in a table in order to use a text area
+	 * to edit and display the text.
+	 * @param multiLineTextColumn the table column to initialise.
+	 */
+	private void initMultiLineTextColumn (TableColumn multiLineTextColumn)
+	{
+		multiLineTextColumn.setCellEditor (
+		  new MultiLineTextEditor (this)
+		);
+	}
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
