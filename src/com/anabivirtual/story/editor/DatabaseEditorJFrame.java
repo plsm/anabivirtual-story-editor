@@ -559,9 +559,11 @@ public class DatabaseEditorJFrame
 	 */
 	private void addMarkerForMarkable (Markable markable)
 	{
-		Marker m = markable.computeMarker ();
-		this.map.addMarker (m);
-		this.dataMarkers.put (markable, m);
+		Platform.runLater (() -> {
+			Marker m = markable.computeMarker ();
+			this.map.addMarker (m);
+			this.dataMarkers.put (markable, m);
+		});
 	}
 }
 
