@@ -80,18 +80,16 @@
                     </Constraint>
                   </Constraints>
 
-                  <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBoxLayout">
-                    <Property name="axis" type="int" value="0"/>
-                  </Layout>
+                  <Layout class="org.netbeans.modules.form.compat2.layouts.DesignFlowLayout"/>
                   <SubComponents>
-                    <Component class="javax.swing.JButton" name="newLocationButton">
+                    <Component class="javax.swing.JButton" name="insertLocationButton">
                       <Properties>
                         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
                           <ResourceString bundle="com/anabivirtual/story/editor/StringBundle.properties" key="NewLocation" replaceFormat="Utilities.getString(&quot;{key}&quot;)"/>
                         </Property>
                       </Properties>
                       <Events>
-                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="newLocationButtonActionPerformed"/>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="insertLocationButtonActionPerformed"/>
                       </Events>
                     </Component>
                     <Component class="javax.swing.JButton" name="deleteLocationButton">
@@ -103,21 +101,6 @@
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="deleteLocationButtonActionPerformed"/>
                       </Events>
-                    </Component>
-                    <Component class="javax.swing.JSeparator" name="jSeparator1">
-                      <AuxValues>
-                        <AuxValue name="JavaCodeGenerator_VariableLocal" type="java.lang.Boolean" value="true"/>
-                        <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="0"/>
-                      </AuxValues>
-                    </Component>
-                    <Component class="javax.swing.JLabel" name="dummyLabel">
-                      <Properties>
-                        <Property name="text" type="java.lang.String" value="..."/>
-                      </Properties>
-                      <AuxValues>
-                        <AuxValue name="JavaCodeGenerator_VariableLocal" type="java.lang.Boolean" value="true"/>
-                        <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="0"/>
-                      </AuxValues>
                     </Component>
                   </SubComponents>
                 </Container>
@@ -202,7 +185,7 @@
                     <Component class="javax.swing.JButton" name="insertStoryButton">
                       <Properties>
                         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-                          <ResourceString bundle="com/anabivirtual/story/editor/StringBundle.properties" key="InsertStory" replaceFormat="Utilities.getString(&quot;{key}&quot;)"/>
+                          <ResourceString bundle="com/anabivirtual/story/editor/StringBundle.properties" key="NewStory" replaceFormat="Utilities.getString(&quot;{key}&quot;)"/>
                         </Property>
                       </Properties>
                       <Events>
@@ -279,7 +262,7 @@
                     <Component class="javax.swing.JButton" name="insertPointOfInterestButton">
                       <Properties>
                         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-                          <ResourceString bundle="com/anabivirtual/story/editor/StringBundle.properties" key="Insert" replaceFormat="Utilities.getString(&quot;{key}&quot;)"/>
+                          <ResourceString bundle="com/anabivirtual/story/editor/StringBundle.properties" key="NewPointOfInterest" replaceFormat="Utilities.getString(&quot;{key}&quot;)"/>
                         </Property>
                       </Properties>
                       <Events>
@@ -293,7 +276,7 @@
                     <Component class="javax.swing.JButton" name="deletePointOfInterestButton">
                       <Properties>
                         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-                          <ResourceString bundle="com/anabivirtual/story/editor/StringBundle.properties" key="Delete" replaceFormat="Utilities.getString(&quot;{key}&quot;)"/>
+                          <ResourceString bundle="com/anabivirtual/story/editor/StringBundle.properties" key="DeletePointOfInterest" replaceFormat="Utilities.getString(&quot;{key}&quot;)"/>
                         </Property>
                       </Properties>
                       <Events>
@@ -354,7 +337,7 @@
                     <Component class="javax.swing.JButton" name="insertBackgroundMusicButton">
                       <Properties>
                         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-                          <ResourceString bundle="com/anabivirtual/story/editor/StringBundle.properties" key="Insert" replaceFormat="Utilities.getString(&quot;{key}&quot;)"/>
+                          <ResourceString bundle="com/anabivirtual/story/editor/StringBundle.properties" key="NewBackgroundMusic" replaceFormat="Utilities.getString(&quot;{key}&quot;)"/>
                         </Property>
                       </Properties>
                       <Events>
@@ -364,7 +347,7 @@
                     <Component class="javax.swing.JButton" name="deleteBackgroundMusicButton">
                       <Properties>
                         <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-                          <ResourceString bundle="com/anabivirtual/story/editor/StringBundle.properties" key="Delete" replaceFormat="Utilities.getString(&quot;{key}&quot;)"/>
+                          <ResourceString bundle="com/anabivirtual/story/editor/StringBundle.properties" key="DeleteBackgroundMusic" replaceFormat="Utilities.getString(&quot;{key}&quot;)"/>
                         </Property>
                       </Properties>
                       <Events>

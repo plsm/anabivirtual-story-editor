@@ -233,10 +233,8 @@ public class DatabaseEditorJFrame
       javax.swing.JTabbedPane databaseTabbedPane = new javax.swing.JTabbedPane();
       javax.swing.JPanel locationsPanel = new javax.swing.JPanel();
       javax.swing.JPanel locationsControlPanel = new javax.swing.JPanel();
-      newLocationButton = new javax.swing.JButton();
+      insertLocationButton = new javax.swing.JButton();
       deleteLocationButton = new javax.swing.JButton();
-      javax.swing.JSeparator jSeparator1 = new javax.swing.JSeparator();
-      javax.swing.JLabel dummyLabel = new javax.swing.JLabel();
       javax.swing.JScrollPane locationsScrollPane = new javax.swing.JScrollPane();
       locationsTable = new javax.swing.JTable();
       javax.swing.JPanel storiesPanel = new javax.swing.JPanel();
@@ -270,17 +268,15 @@ public class DatabaseEditorJFrame
 
       locationsPanel.setLayout(new java.awt.BorderLayout());
 
-      locationsControlPanel.setLayout(new javax.swing.BoxLayout(locationsControlPanel, javax.swing.BoxLayout.X_AXIS));
-
-      newLocationButton.setText(Utilities.getString("NewLocation")); // NOI18N
-      newLocationButton.addActionListener(new java.awt.event.ActionListener()
+      insertLocationButton.setText(Utilities.getString("NewLocation")); // NOI18N
+      insertLocationButton.addActionListener(new java.awt.event.ActionListener()
       {
          public void actionPerformed(java.awt.event.ActionEvent evt)
          {
-            newLocationButtonActionPerformed(evt);
+            insertLocationButtonActionPerformed(evt);
          }
       });
-      locationsControlPanel.add(newLocationButton);
+      locationsControlPanel.add(insertLocationButton);
 
       deleteLocationButton.setText(Utilities.getString("DeleteLocation")); // NOI18N
       deleteLocationButton.addActionListener(new java.awt.event.ActionListener()
@@ -291,10 +287,6 @@ public class DatabaseEditorJFrame
          }
       });
       locationsControlPanel.add(deleteLocationButton);
-      locationsControlPanel.add(jSeparator1);
-
-      dummyLabel.setText("...");
-      locationsControlPanel.add(dummyLabel);
 
       locationsPanel.add(locationsControlPanel, java.awt.BorderLayout.SOUTH);
 
@@ -312,7 +304,7 @@ public class DatabaseEditorJFrame
 
       storiesPanel.add(storiesScrollPane, java.awt.BorderLayout.CENTER);
 
-      insertStoryButton.setText(Utilities.getString("InsertStory")); // NOI18N
+      insertStoryButton.setText(Utilities.getString("NewStory")); // NOI18N
       insertStoryButton.addActionListener(new java.awt.event.ActionListener()
       {
          public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -343,7 +335,7 @@ public class DatabaseEditorJFrame
 
       pointsOfInterestPanel.add(pointsOfInterestScrollPane, java.awt.BorderLayout.CENTER);
 
-      insertPointOfInterestButton.setText(Utilities.getString("Insert")); // NOI18N
+      insertPointOfInterestButton.setText(Utilities.getString("NewPointOfInterest")); // NOI18N
       insertPointOfInterestButton.addActionListener(new java.awt.event.ActionListener()
       {
          public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -353,7 +345,7 @@ public class DatabaseEditorJFrame
       });
       pointsOfInterestControlPanel.add(insertPointOfInterestButton);
 
-      deletePointOfInterestButton.setText(Utilities.getString("Delete")); // NOI18N
+      deletePointOfInterestButton.setText(Utilities.getString("DeletePointOfInterest")); // NOI18N
       deletePointOfInterestButton.addActionListener(new java.awt.event.ActionListener()
       {
          public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -374,7 +366,7 @@ public class DatabaseEditorJFrame
 
       backgroundMusicPanel.add(backgroundMusicScrollPane, java.awt.BorderLayout.CENTER);
 
-      insertBackgroundMusicButton.setText(Utilities.getString("Insert")); // NOI18N
+      insertBackgroundMusicButton.setText(Utilities.getString("NewBackgroundMusic")); // NOI18N
       insertBackgroundMusicButton.addActionListener(new java.awt.event.ActionListener()
       {
          public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -384,7 +376,7 @@ public class DatabaseEditorJFrame
       });
       backgroundMusicControlPanel.add(insertBackgroundMusicButton);
 
-      deleteBackgroundMusicButton.setText(Utilities.getString("Delete")); // NOI18N
+      deleteBackgroundMusicButton.setText(Utilities.getString("DeleteBackgroundMusic")); // NOI18N
       deleteBackgroundMusicButton.addActionListener(new java.awt.event.ActionListener()
       {
          public void actionPerformed(java.awt.event.ActionEvent evt)
@@ -409,12 +401,12 @@ public class DatabaseEditorJFrame
       pack();
    }// </editor-fold>//GEN-END:initComponents
 
-   private void newLocationButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_newLocationButtonActionPerformed
-   {//GEN-HEADEREND:event_newLocationButtonActionPerformed
+   private void insertLocationButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_insertLocationButtonActionPerformed
+   {//GEN-HEADEREND:event_insertLocationButtonActionPerformed
 		int row = this.database.getLocations ().size ();
 		this.database.insertLocation (DEFAULT_LATITUDE, DEFAULT_LONGITUDE, "");
 		this.locationTableModel.fireTableRowsInserted (row, row);
-   }//GEN-LAST:event_newLocationButtonActionPerformed
+   }//GEN-LAST:event_insertLocationButtonActionPerformed
 
    private void deleteLocationButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deleteLocationButtonActionPerformed
    {//GEN-HEADEREND:event_deleteLocationButtonActionPerformed
@@ -513,10 +505,10 @@ public class DatabaseEditorJFrame
    private javax.swing.JButton deleteLocationButton;
    private javax.swing.JButton deleteStoryButton;
    private javax.swing.JButton insertBackgroundMusicButton;
+   private javax.swing.JButton insertLocationButton;
    private javax.swing.JButton insertStoryButton;
    private javax.swing.JTable locationsTable;
    private javax.swing.JPanel mapPanel;
-   private javax.swing.JButton newLocationButton;
    private javax.swing.JTable pointsOfInterestTable;
    private javax.swing.JTable storiesTable;
    // End of variables declaration//GEN-END:variables
