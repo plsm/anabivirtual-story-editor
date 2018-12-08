@@ -230,32 +230,33 @@ public class DatabaseEditorJFrame
    {
 
       javax.swing.JSplitPane mainSplitPane = new javax.swing.JSplitPane();
+      mapPanel = new javax.swing.JPanel();
+      javax.swing.JPanel databasePanel = new javax.swing.JPanel();
       javax.swing.JTabbedPane databaseTabbedPane = new javax.swing.JTabbedPane();
       javax.swing.JPanel locationsPanel = new javax.swing.JPanel();
       javax.swing.JPanel locationsControlPanel = new javax.swing.JPanel();
-      insertLocationButton = new javax.swing.JButton();
-      deleteLocationButton = new javax.swing.JButton();
+      javax.swing.JButton insertLocationButton = new javax.swing.JButton();
+      javax.swing.JButton deleteLocationButton = new javax.swing.JButton();
       javax.swing.JScrollPane locationsScrollPane = new javax.swing.JScrollPane();
       locationsTable = new javax.swing.JTable();
       javax.swing.JPanel storiesPanel = new javax.swing.JPanel();
       javax.swing.JScrollPane storiesScrollPane = new javax.swing.JScrollPane();
       storiesTable = new javax.swing.JTable();
       javax.swing.JPanel storiesControlPanel = new javax.swing.JPanel();
-      insertStoryButton = new javax.swing.JButton();
-      deleteStoryButton = new javax.swing.JButton();
+      javax.swing.JButton insertStoryButton = new javax.swing.JButton();
+      javax.swing.JButton deleteStoryButton = new javax.swing.JButton();
       javax.swing.JPanel pointsOfInterestPanel = new javax.swing.JPanel();
       javax.swing.JScrollPane pointsOfInterestScrollPane = new javax.swing.JScrollPane();
       pointsOfInterestTable = new javax.swing.JTable();
       javax.swing.JPanel pointsOfInterestControlPanel = new javax.swing.JPanel();
       javax.swing.JButton insertPointOfInterestButton = new javax.swing.JButton();
       javax.swing.JButton deletePointOfInterestButton = new javax.swing.JButton();
-      backgroundMusicPanel = new javax.swing.JPanel();
-      backgroundMusicScrollPane = new javax.swing.JScrollPane();
+      javax.swing.JPanel backgroundMusicPanel = new javax.swing.JPanel();
+      javax.swing.JScrollPane backgroundMusicScrollPane = new javax.swing.JScrollPane();
       backgroundMusicTable = new javax.swing.JTable();
-      backgroundMusicControlPanel = new javax.swing.JPanel();
-      insertBackgroundMusicButton = new javax.swing.JButton();
-      deleteBackgroundMusicButton = new javax.swing.JButton();
-      mapPanel = new javax.swing.JPanel();
+      javax.swing.JPanel backgroundMusicControlPanel = new javax.swing.JPanel();
+      javax.swing.JButton insertBackgroundMusicButton = new javax.swing.JButton();
+      javax.swing.JButton deleteBackgroundMusicButton = new javax.swing.JButton();
 
       setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
       addWindowListener(new java.awt.event.WindowAdapter()
@@ -266,6 +267,14 @@ public class DatabaseEditorJFrame
          }
       });
 
+      mapPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+      mapPanel.setLayout(new java.awt.BorderLayout());
+      mainSplitPane.setRightComponent(mapPanel);
+
+      databasePanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 8, 8, 8));
+      databasePanel.setLayout(new java.awt.BorderLayout());
+
+      locationsPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
       locationsPanel.setLayout(new java.awt.BorderLayout());
 
       insertLocationButton.setText(Utilities.getString("NewLocation")); // NOI18N
@@ -297,6 +306,7 @@ public class DatabaseEditorJFrame
 
       databaseTabbedPane.addTab(Utilities.getString("Locations"), locationsPanel); // NOI18N
 
+      storiesPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
       storiesPanel.setLayout(new java.awt.BorderLayout());
 
       storiesTable.setModel(this.storyTableModel);
@@ -328,6 +338,7 @@ public class DatabaseEditorJFrame
 
       databaseTabbedPane.addTab(Utilities.getString("Stories"), storiesPanel); // NOI18N
 
+      pointsOfInterestPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
       pointsOfInterestPanel.setLayout(new java.awt.BorderLayout());
 
       pointsOfInterestTable.setModel(this.pointOfInterestTableModel);
@@ -359,6 +370,7 @@ public class DatabaseEditorJFrame
 
       databaseTabbedPane.addTab(Utilities.getString("PointsOfInterest"), pointsOfInterestPanel); // NOI18N
 
+      backgroundMusicPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
       backgroundMusicPanel.setLayout(new java.awt.BorderLayout());
 
       backgroundMusicTable.setModel(this.backgroundMusicTableModel);
@@ -390,11 +402,9 @@ public class DatabaseEditorJFrame
 
       databaseTabbedPane.addTab(Utilities.getString("BackgroundMusic"), backgroundMusicPanel); // NOI18N
 
-      mainSplitPane.setLeftComponent(databaseTabbedPane);
+      databasePanel.add(databaseTabbedPane, java.awt.BorderLayout.CENTER);
 
-      mapPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-      mapPanel.setLayout(new java.awt.BorderLayout());
-      mainSplitPane.setRightComponent(mapPanel);
+      mainSplitPane.setLeftComponent(databasePanel);
 
       getContentPane().add(mainSplitPane, java.awt.BorderLayout.CENTER);
 
@@ -497,16 +507,7 @@ public class DatabaseEditorJFrame
 	}
 
    // Variables declaration - do not modify//GEN-BEGIN:variables
-   private javax.swing.JPanel backgroundMusicControlPanel;
-   private javax.swing.JPanel backgroundMusicPanel;
-   private javax.swing.JScrollPane backgroundMusicScrollPane;
    private javax.swing.JTable backgroundMusicTable;
-   private javax.swing.JButton deleteBackgroundMusicButton;
-   private javax.swing.JButton deleteLocationButton;
-   private javax.swing.JButton deleteStoryButton;
-   private javax.swing.JButton insertBackgroundMusicButton;
-   private javax.swing.JButton insertLocationButton;
-   private javax.swing.JButton insertStoryButton;
    private javax.swing.JTable locationsTable;
    private javax.swing.JPanel mapPanel;
    private javax.swing.JTable pointsOfInterestTable;

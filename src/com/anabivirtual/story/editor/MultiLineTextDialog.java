@@ -69,6 +69,8 @@ class MultiLineTextDialog
 
       getContentPane().add(controlPanel, java.awt.BorderLayout.SOUTH);
 
+      textScrollPane.setPreferredSize(new java.awt.Dimension(800, 600));
+
       multiLineTextArea.setColumns(20);
       multiLineTextArea.setRows(5);
       textScrollPane.setViewportView(multiLineTextArea);
