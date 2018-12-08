@@ -36,6 +36,7 @@ public class PointOfInterestTableModel
 	{
 		ID,
 		LOCATION,
+		HAS_IMAGE,
 		IMAGE_FILENAME,
 		AUDIO_FILENAME,
 		TRANSCRIPTION
@@ -73,6 +74,8 @@ public class PointOfInterestTableModel
 				return pointOfInterest.getID ();
 			case LOCATION:
 				return pointOfInterest.getLocation ();
+			case HAS_IMAGE:
+				return pointOfInterest.hasImage ();
 			case IMAGE_FILENAME:
 				return pointOfInterest.getImageFilename ();
 			case AUDIO_FILENAME:
@@ -98,6 +101,8 @@ public class PointOfInterestTableModel
 			case AUDIO_FILENAME:
 			case TRANSCRIPTION:
 				return String.class;
+			case HAS_IMAGE:
+				return Boolean.class;
 			case LOCATION:
 				return Location.class;
 		}
@@ -111,10 +116,13 @@ public class PointOfInterestTableModel
 			case ID:
 				return false;
 			case LOCATION:
-			case IMAGE_FILENAME:
+			case HAS_IMAGE:
 			case AUDIO_FILENAME:
 			case TRANSCRIPTION:
 				return true;
+			case IMAGE_FILENAME:
+				PointOfInterest pointOfInterest = this.getPointOfInterest (rowIndex);
+				return pointOfInterest.hasImage ();
 		}
 		throw new Error ("Not reachable");
 	}
@@ -125,6 +133,7 @@ public class PointOfInterestTableModel
 		PointOfInterest aPointOfInterest = this.getPointOfInterest (rowIndex);
 		boolean updated = false;
 		String asString;
+		boolean asBoolean;
 		switch (Column.values () [columnIndex]) {
 			case ID:
 				return ;
@@ -134,8 +143,20 @@ public class PointOfInterestTableModel
 					updated = true;
 				}
 				break ;
+			case HAS_IMAGE:
+				asBoolean = (Boolean) aValue;
+				if (asBoolean != aPointOfInterest.hasImage ()) {
+					if (asBoolean)
+						aPointOfInterest.enableImage ();
+					else
+						aPointOfInterest.disableImage ();
+					updated = true;
+				}
+				break ;
 			case IMAGE_FILENAME:
-				if (aPointOfInterest.getImageFilename ().compareTo ((String) aValue) != 0) {
+				if (
+				  aPointOfInterest.getImageFilename () == null ||
+				  aPointOfInterest.getImageFilename ().compareTo ((String) aValue) != 0) {
 					aPointOfInterest.setImageFilename ((String) aValue);
 					updated = true;
 				}

@@ -18,6 +18,7 @@ final public class PointOfInterest
 	private final long ID;
 	private Location location;
 	private String imageFilename;
+	private boolean hasImage;
 	private String audioFilename;
 	private String audioTranscription;
 	/**
@@ -33,6 +34,7 @@ final public class PointOfInterest
 		this.ID = ID;
 		this.location = location;
 		this.imageFilename = imageFilename;
+		this.hasImage = imageFilename != null;
 		this.audioFilename = audioFilename;
 		this.audioTranscription = audioTranscription;
 	}
@@ -93,12 +95,17 @@ final public class PointOfInterest
 	@Override
 	public boolean hasImage ()
 	{
-		return this.imageFilename != null;
+		return this.hasImage;
 	}
 	
-	public void clearImageFilename ()
+	public void disableImage ()
 	{
-		this.imageFilename = null;
+		this.hasImage = false;
+	}
+	
+	public void enableImage ()
+	{
+		this.hasImage = true;
 	}
 	
 	@Override
