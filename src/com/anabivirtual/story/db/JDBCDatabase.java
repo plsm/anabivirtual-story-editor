@@ -171,7 +171,7 @@ final public class JDBCDatabase
 	private Map<Long, Story> readStories ()
 	{
 		String sql = "SELECT * FROM view_story";
-		CursorToRecord<Story> c2r = (ResultSet rs) -> new Story (
+		CursorToRecord<Story> c2r = (ResultSet rs) -> Story.create (
 		  rs.getLong ("story_ID"),
 		  JDBCDatabase.this.locations.get (rs.getLong ("location_ID")),
 		  rs.getString ("title"),
@@ -189,7 +189,7 @@ final public class JDBCDatabase
 	private Map<Long, PointOfInterest> readPointsOfInterest ()
 	{
 		String sql = "SELECT * FROM view_point_of_interest";
-		CursorToRecord<PointOfInterest> c2r = (ResultSet rs) -> new PointOfInterest (
+		CursorToRecord<PointOfInterest> c2r = (ResultSet rs) -> PointOfInterest.create (
 		  rs.getLong ("point_of_interest_ID"),
 		  JDBCDatabase.this.locations.get (rs.getLong ("location_ID")),
 		  rs.getString ("image_filename"),
@@ -325,7 +325,7 @@ final public class JDBCDatabase
 			rs.next ();
 			long story_ID = rs.getLong (1);
 			ps.close ();
-			Story insertedStory = new Story (
+			Story insertedStory = Story.create (
 			  story_ID, location, title, filename, transcription);
 			this.stories.put (story_ID, insertedStory);
 			return insertedStory;
@@ -388,7 +388,7 @@ final public class JDBCDatabase
 			rs.next ();
 			long pointOfInterest_ID = rs.getLong (1);
 			ps.close ();
-			PointOfInterest insertedPointOfInterest = new PointOfInterest (
+			PointOfInterest insertedPointOfInterest = PointOfInterest.create (
 			  pointOfInterest_ID, location, imageFilename,
 			  audioFilename, audioTranscription);
 			this.pointsOfInterest.put (pointOfInterest_ID, insertedPointOfInterest);

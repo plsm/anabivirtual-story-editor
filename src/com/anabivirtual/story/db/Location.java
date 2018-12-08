@@ -1,5 +1,9 @@
 package com.anabivirtual.story.db;
 
+import com.lynden.gmapsfx.javascript.object.LatLong;
+import com.lynden.gmapsfx.javascript.object.Marker;
+import com.lynden.gmapsfx.javascript.object.MarkerOptions;
+
 /**
  *
  * @author pedro
@@ -7,6 +11,7 @@ package com.anabivirtual.story.db;
 public class Location
   implements
   com.anabivirtual.story.core.Location,
+  Markable,
   Keyable
 {
 	private final long ID;
@@ -80,6 +85,22 @@ public class Location
 	public long getKey ()
 	{
 		return this.ID;
+	}
+
+	/**
+	 * Compute the marker for this location.
+	 */
+	@Override
+	public Marker computeMarker ()
+	{
+		LatLong ll = new LatLong (this.latitude, this.longitude);
+		MarkerOptions markerOptions = new MarkerOptions ();
+		markerOptions
+		  .position (ll)
+		  .title (this.name)
+		  .visible (true)
+		;
+		return new Marker (markerOptions);
 	}
 
 	@Override

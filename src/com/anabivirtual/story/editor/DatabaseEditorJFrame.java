@@ -4,6 +4,7 @@ import com.anabivirtual.story.db.BackgroundMusic;
 import com.anabivirtual.story.db.Story;
 import com.anabivirtual.story.db.JDBCDatabase;
 import com.anabivirtual.story.db.Location;
+import com.anabivirtual.story.db.Markable;
 import com.anabivirtual.story.db.PointOfInterest;
 import com.lynden.gmapsfx.GoogleMapView;
 import com.lynden.gmapsfx.MapComponentInitializedListener;
@@ -12,12 +13,11 @@ import com.lynden.gmapsfx.javascript.object.LatLong;
 import com.lynden.gmapsfx.javascript.object.MapOptions;
 import com.lynden.gmapsfx.javascript.object.MapTypeIdEnum;
 import com.lynden.gmapsfx.javascript.object.Marker;
-import com.lynden.gmapsfx.javascript.object.MarkerOptions;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.io.File;
 import java.util.Collection;
-import java.util.LinkedList;
+import java.util.HashMap;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
@@ -55,6 +55,10 @@ public class DatabaseEditorJFrame
 	 */
 	final private double DEFAULT_LONGITUDE = 0;
 	/**
+	 * A map containing all the markers for all data in the map.
+	 */
+	final private HashMap<Object, Marker> dataMarkers;
+	/**
 	 * Creates new form DatabaseEditorJFrame
 	 * @param file
 	 * @param database
@@ -66,6 +70,7 @@ public class DatabaseEditorJFrame
 		this.storyTableModel = new StoryTableModel (database);
 		this.pointOfInterestTableModel = new PointOfInterestTableModel (database);
 		this.backgroundMusicTableModel = new BackgroundMusicTableModel (database);
+		this.dataMarkers = new HashMap<> ();
 		initComponents ();
 		this.initLocationTable ();
 		this.initStoryTable ();
@@ -417,10 +422,12 @@ public class DatabaseEditorJFrame
    {//GEN-HEADEREND:event_insertStoryButtonActionPerformed
 		Collection<Location> ls = this.database.getLocations ();
 		Location l = ls.iterator ().next ();
-		this.database.insertStory (l, "new title", "file.mp3", "transcription");
+		Story s =
+		  this.database.insertStory (l, "new title", "file.mp3", "transcription");
 		this.storyTableModel.fireTableDataChanged ();
 		int row = ls.size ();
 		this.storyTableModel.fireTableRowsInserted (row, row);
+		this.addMarkerForMarkable (s);
    }//GEN-LAST:event_insertStoryButtonActionPerformed
 
    private void deleteStoryButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deleteStoryButtonActionPerformed
@@ -430,16 +437,19 @@ public class DatabaseEditorJFrame
 			Story as = this.storyTableModel.getStory (row);
 			this.database.deleteStory (as);
 			this.storyTableModel.fireTableRowsDeleted (row, row);
+			this.map.removeMarker (this.dataMarkers.remove (as));
 		}
    }//GEN-LAST:event_deleteStoryButtonActionPerformed
 
    private void insertPointOfInterestButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_insertPointOfInterestButtonActionPerformed
    {//GEN-HEADEREND:event_insertPointOfInterestButtonActionPerformed
 		Location l = this.getDefaultLocation ();
-		this.database.insertPointOfInterest (l, "image.png", "audio.mp3", "transcription");
+		PointOfInterest poi =
+		  this.database.insertPointOfInterest (l, "image.png", "audio.mp3", "transcription");
 		Collection ps = this.database.getPointsOfInterest ();
 		int row = ps.size ();
 		this.pointOfInterestTableModel.fireTableRowsInserted (row, row);
+		this.addMarkerForMarkable (poi);
    }//GEN-LAST:event_insertPointOfInterestButtonActionPerformed
 
    private void deletePointOfInterestButtonActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_deletePointOfInterestButtonActionPerformed
@@ -449,6 +459,7 @@ public class DatabaseEditorJFrame
 			PointOfInterest p = this.pointOfInterestTableModel.getPointOfInterest (row);
 			this.database.deletePointOfInterest (p);
 			this.pointOfInterestTableModel.fireTableRowsDeleted (row, row);
+			this.map.removeMarker (this.dataMarkers.remove (p));
 		}
    }//GEN-LAST:event_deletePointOfInterestButtonActionPerformed
 
@@ -501,22 +512,26 @@ public class DatabaseEditorJFrame
 	@Override
 	public void mapInitialized ()
 	{
-		LinkedList<Marker> markers = new LinkedList<> ();
 		float center_latitude = 0, center_longitude = 0;
-		for (Location l : this.database.getLocations ()) {
-			center_latitude += l.getLatitude ();
-			center_longitude += l.getLongitude ();
-			LatLong ll = new LatLong (l.getLatitude (), l.getLongitude ());
-			MarkerOptions markerOptions = new MarkerOptions ();
-			markerOptions
-			  .position (ll)
-			  .title (l.getName ())
-			  .visible (true)
-			;
-			markers.add (new Marker (markerOptions));
+		for (PointOfInterest poi : this.database.getPointsOfInterest ()) {
+			center_latitude += poi.getLocation ().getLatitude ();
+			center_longitude += poi.getLocation ().getLongitude ();
+			Marker m = poi.computeMarker ();
+			this.dataMarkers.put (poi, m);
 		}
-		center_latitude = center_latitude / this.database.getLocations ().size ();
-		center_longitude = center_longitude / this.database.getLocations ().size ();
+		for (Story s : this.database.getStories ()) {
+			center_latitude += s.getLocation ().getLatitude ();
+			center_longitude += s.getLocation ().getLongitude ();
+			Marker m = s.computeMarker ();
+			this.dataMarkers.put (s, m);
+		}
+		int size =
+		  this.database.getPointsOfInterest ().size () +
+		  this.database.getStories ().size ();
+		if (size > 0) {
+			center_latitude = center_latitude / size;
+			center_longitude = center_longitude / size;
+		}
 		LatLong center = new LatLong (center_latitude, center_longitude);
 		//Once the map has been loaded by the Webview, initialize the map details.
 		MapOptions options = new MapOptions ();
@@ -533,9 +548,20 @@ public class DatabaseEditorJFrame
 		  mapType (MapTypeIdEnum.ROADMAP);
 		this.map = this.gmc.createMap (options);
 		// Add markers
-		for (Marker m : markers) {
+		for (Marker m : this.dataMarkers.values ()) {
 			this.map.addMarker (m);
 		}
+	}
+	
+	/**
+	 * Add a marker in the map for the given markable.
+	 * @param markable an object that has a marker.
+	 */
+	private void addMarkerForMarkable (Markable markable)
+	{
+		Marker m = markable.computeMarker ();
+		this.map.addMarker (m);
+		this.dataMarkers.put (markable, m);
 	}
 }
 

@@ -1,5 +1,9 @@
 package com.anabivirtual.story.db;
 
+import com.lynden.gmapsfx.javascript.object.LatLong;
+import com.lynden.gmapsfx.javascript.object.Marker;
+import com.lynden.gmapsfx.javascript.object.MarkerOptions;
+
 /**
  * An editable story.
  * Instances of this class represent records in table {@code story}.
@@ -10,6 +14,7 @@ package com.anabivirtual.story.db;
 final public class Story
   implements
   com.anabivirtual.story.core.Story<Location>,
+  Markable,
   Keyable
 {
 	private final long ID;
@@ -25,13 +30,28 @@ final public class Story
 	 * @param filename the audio filename containing the story that is played to the user.
 	 * @param transcription the audio transcription
 	 */
-	Story (long ID, Location location, String title, String filename, String transcription)
+	private Story (long ID, Location location, String title, String filename, String transcription)
 	{
 		this.ID = ID;
 		this.location = location;
 		this.title = title;
 		this.filename = filename;
 		this.transcription = transcription;
+	}
+
+	/**
+	 * Create a story with the given parameters.
+	 * @param ID the primary key of the corresponding record in table {@code story}. 
+	 * @param location the location of this story in the globe.
+	 * @param title the title of this story.
+	 * @param filename the audio filename containing the story that is played to the user.
+	 * @param transcription the audio transcription
+	 */
+	static Story create (long ID, Location location, String title, String filename, String transcription)
+	{
+		Story result = new Story (
+		  ID, location, title, filename, transcription);
+		return result;
 	}
 
 	@Override
@@ -108,6 +128,29 @@ final public class Story
 	public long getKey ()
 	{
 		return this.ID;
+	}
+
+	/**
+	 * Compute the marker for this story.
+	 * @return the marker for this story.
+	 */
+	@Override
+	public Marker computeMarker ()
+	{
+		LatLong ll = new LatLong (
+		  this.location.getLatitude (),
+		  this.location.getLongitude ());
+		String t = String.format (
+		  "%s\n@%s",
+		  this.title,
+		  this.location.getName ());
+		MarkerOptions markerOptions = new MarkerOptions ();
+		markerOptions
+		  .position (ll)
+		  .title (t)
+		  .visible (true)
+		;
+		return new Marker (markerOptions);
 	}
 
 	@Override

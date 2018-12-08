@@ -1,5 +1,9 @@
 package com.anabivirtual.story.db;
 
+import com.lynden.gmapsfx.javascript.object.LatLong;
+import com.lynden.gmapsfx.javascript.object.Marker;
+import com.lynden.gmapsfx.javascript.object.MarkerOptions;
+
 /**
  *
  * @author pedro
@@ -8,6 +12,7 @@ package com.anabivirtual.story.db;
 final public class PointOfInterest
   implements
   com.anabivirtual.story.core.PointOfInterest<Location>,
+  Markable,
   Keyable
 {
 	private final long ID;
@@ -23,13 +28,28 @@ final public class PointOfInterest
 	 * @param audioFilename the audio with the description of the point of interest.
 	 * @param audioTranscription the audio transcription of the point of interest.
 	 */
-	PointOfInterest (long ID, Location location, String imageFilename, String audioFilename, String audioTranscription)
+	private PointOfInterest (long ID, Location location, String imageFilename, String audioFilename, String audioTranscription)
 	{
 		this.ID = ID;
 		this.location = location;
 		this.imageFilename = imageFilename;
 		this.audioFilename = audioFilename;
 		this.audioTranscription = audioTranscription;
+	}
+
+	/**
+	 * Create a new instance of a point of interest.
+	 * @param ID the primary key in the {@code point_of_interest} table.
+	 * @param location the location of the point of interest.
+	 * @param imageFilename the image of the point of interest.
+	 * @param audioFilename the audio with the description of the point of interest.
+	 * @param audioTranscription the audio transcription of the point of interest.
+	 */
+	static PointOfInterest create (long ID, Location location, String imageFilename, String audioFilename, String audioTranscription)
+	{
+		PointOfInterest result = new PointOfInterest (
+		  ID, location, imageFilename, audioFilename, audioTranscription);
+		return result;
 	}
 
 	@Override
@@ -106,6 +126,25 @@ final public class PointOfInterest
 	public void setTranscription (String value)
 	{
 		this.audioTranscription = value;
+	}
+
+	/**
+	 * Compute the marker for this point of interest.
+	 * @return the marker for this point of interest.
+	 */
+	@Override
+	public Marker computeMarker ()
+	{
+		LatLong ll = new LatLong (
+		  this.location.getLatitude (),
+		  this.location.getLongitude ());
+		MarkerOptions markerOptions = new MarkerOptions ();
+		markerOptions
+		  .position (ll)
+		  .title (String.format ("POI\n@%s", this.location.getName ()))
+		  .visible (true)
+		;
+		return new Marker (markerOptions);
 	}
 
 	@Override
