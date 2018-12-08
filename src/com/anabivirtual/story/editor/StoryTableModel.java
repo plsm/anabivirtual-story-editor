@@ -114,6 +114,7 @@ final public class StoryTableModel
 			case LOCATION:
 				if (aStory.getLocation () != (Location) aValue) {
 					aStory.setLocation ((Location) aValue);
+					updated = true;
 				}
 				break ;
 			case AUDIO_FILENAME:

@@ -131,6 +131,7 @@ public class PointOfInterestTableModel
 			case LOCATION:
 				if (aPointOfInterest.getLocation () != (Location) aValue) {
 					aPointOfInterest.setLocation ((Location) aValue);
+					updated = true;
 				}
 				break ;
 			case IMAGE_FILENAME:
