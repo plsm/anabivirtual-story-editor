@@ -18,6 +18,8 @@ import java.awt.Component;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
@@ -28,6 +30,7 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
+import javax.swing.MutableComboBoxModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 
@@ -44,6 +47,7 @@ public class DatabaseEditorJFrame
 	final StoryTableModel storyTableModel;
 	final PointOfInterestTableModel pointOfInterestTableModel;
 	final BackgroundMusicTableModel backgroundMusicTableModel;
+	final Set<MutableComboBoxModel> locationComboBoxes;
 	private GoogleMapView gmc;
 	private GoogleMap map;
 	/**
@@ -70,6 +74,7 @@ public class DatabaseEditorJFrame
 		this.storyTableModel = new StoryTableModel (database);
 		this.pointOfInterestTableModel = new PointOfInterestTableModel (database);
 		this.backgroundMusicTableModel = new BackgroundMusicTableModel (database);
+		this.locationComboBoxes = new HashSet<> ();
 		this.dataMarkers = new HashMap<> ();
 		initComponents ();
 		this.initLocationTable ();
@@ -454,7 +459,7 @@ public class DatabaseEditorJFrame
    {//GEN-HEADEREND:event_insertPointOfInterestButtonActionPerformed
 		Location l = this.getDefaultLocation ();
 		PointOfInterest poi =
-		  this.database.insertPointOfInterest (l, "image.png", "audio.mp3", "transcription");
+		  this.database.insertPointOfInterest (l, "title", "image.png", "audio.mp3", "transcription");
 		Collection ps = this.database.getPointsOfInterest ();
 		int row = ps.size ();
 		this.pointOfInterestTableModel.fireTableRowsInserted (row, row);

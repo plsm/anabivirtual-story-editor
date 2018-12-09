@@ -18,6 +18,7 @@ CREATE TABLE story (
 
 CREATE TABLE point_of_interest (
   ID INTEGER PRIMARY KEY ASC NOT NULL,
+  title TEXT NOT NULL,
   audio_filename TEXT NOT NULL,
   transcription TEXT NOT NULL,
   image_filename TEXT,
@@ -63,6 +64,7 @@ CREATE VIEW view_point_of_interest (
   latitude,
   longitude,
   location_name,
+  title,
   image_filename,
   audio_filename,
   transcription
@@ -72,6 +74,7 @@ CREATE VIEW view_point_of_interest (
   location.latitude,
   location.longitude,
   location.name,
+  point_of_interest.title,
   point_of_interest.image_filename,
   point_of_interest.audio_filename,
   point_of_interest.transcription

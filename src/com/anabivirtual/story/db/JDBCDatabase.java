@@ -192,6 +192,7 @@ final public class JDBCDatabase
 		CursorToRecord<PointOfInterest> c2r = (ResultSet rs) -> PointOfInterest.create (
 		  rs.getLong ("point_of_interest_ID"),
 		  JDBCDatabase.this.locations.get (rs.getLong ("location_ID")),
+		  rs.getString ("title"),
 		  rs.getString ("image_filename"),
 		  rs.getString ("audio_filename"),
 		  rs.getString ("transcription")
@@ -370,26 +371,27 @@ final public class JDBCDatabase
 		return true;
 	}
 	//**************************************************************************
-	public PointOfInterest insertPointOfInterest (Location location, String imageFilename, String audioFilename, String audioTranscription)
+	public PointOfInterest insertPointOfInterest (Location location, String title, String imageFilename, String audioFilename, String audioTranscription)
 	{
 		String sql;
 		if (imageFilename == null) 
-			sql = "INSERT INTO point_of_interest (location_ID, audio_filename, transcription) VALUES (?, ?, ?)";
+			sql = "INSERT INTO point_of_interest (location_ID, title, audio_filename, transcription) VALUES (?, ?, ?, ?)";
 		else
-			sql = "INSERT INTO point_of_interest (location_ID, audio_filename, transcription, image_filename) VALUES (?, ?, ?, ?)";
+			sql = "INSERT INTO point_of_interest (location_ID, title, audio_filename, transcription, image_filename) VALUES (?, ?, ?, ?, ?)";
 		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
 			ps.setLong (1, location.getID ());
-			ps.setString (2, audioFilename);
-			ps.setString (3, audioTranscription);
+			ps.setString (2, title);
+			ps.setString (3, audioFilename);
+			ps.setString (4, audioTranscription);
 			if (imageFilename != null)
-				ps.setString (4, imageFilename);
+				ps.setString (5, imageFilename);
 			ps.executeUpdate ();
 			ResultSet rs = ps.getGeneratedKeys ();
 			rs.next ();
 			long pointOfInterest_ID = rs.getLong (1);
 			ps.close ();
 			PointOfInterest insertedPointOfInterest = PointOfInterest.create (
-			  pointOfInterest_ID, location, imageFilename,
+			  pointOfInterest_ID, location, title, imageFilename,
 			  audioFilename, audioTranscription);
 			this.pointsOfInterest.put (pointOfInterest_ID, insertedPointOfInterest);
 			return insertedPointOfInterest;
@@ -419,19 +421,20 @@ final public class JDBCDatabase
 	{
 		String sql;
 		if (pointOfInterest.hasImage ())
-			sql = "UPDATE point_of_interest SET location_ID = ?, audio_filename = ?, transcription = ?, image_filename = ? WHERE ID = ?";
+			sql = "UPDATE point_of_interest SET location_ID = ?, title = ?, audio_filename = ?, transcription = ?, image_filename = ? WHERE ID = ?";
 		else
-			sql = "UPDATE point_of_interest SET location_ID = ?, audio_filename = ?, transcription = ?, image_filename = NULL WHERE ID = ?";
+			sql = "UPDATE point_of_interest SET location_ID = ?, title = ?, audio_filename = ?, transcription = ?, image_filename = NULL WHERE ID = ?";
 		try (PreparedStatement ps = this.connection.prepareStatement (sql)) {
 			ps.setLong (1, pointOfInterest.getLocation ().getID ());
-			ps.setString (2, pointOfInterest.getAudioFilename ());
-			ps.setString (3, pointOfInterest.getTranscription ());
+			ps.setString (2, pointOfInterest.getTitle ());
+			ps.setString (3, pointOfInterest.getAudioFilename ());
+			ps.setString (4, pointOfInterest.getTranscription ());
 			if (pointOfInterest.hasImage ()) {
-				ps.setString (4, pointOfInterest.getImageFilename ());
-				ps.setLong (5, pointOfInterest.getID ());
+				ps.setString (5, pointOfInterest.getImageFilename ());
+				ps.setLong (6, pointOfInterest.getID ());
 			}
 			else
-				ps.setLong (4, pointOfInterest.getID ());
+				ps.setLong (5, pointOfInterest.getID ());
 			ps.executeUpdate ();
 		}
 		catch (SQLException ex) {

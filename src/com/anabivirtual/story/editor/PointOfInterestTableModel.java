@@ -35,6 +35,7 @@ public class PointOfInterestTableModel
 	enum Column
 	{
 		ID,
+		TITLE,
 		LOCATION,
 		HAS_IMAGE,
 		IMAGE_FILENAME,
@@ -72,6 +73,8 @@ public class PointOfInterestTableModel
 		switch (Column.values () [columnIndex]) {
 			case ID:
 				return pointOfInterest.getID ();
+			case TITLE:
+				return pointOfInterest.getTitle ();
 			case LOCATION:
 				return pointOfInterest.getLocation ();
 			case HAS_IMAGE:
@@ -97,6 +100,7 @@ public class PointOfInterestTableModel
 		switch (Column.values () [columnIndex]) {
 			case ID:
 				return Long.class;
+			case TITLE:
 			case IMAGE_FILENAME:
 			case AUDIO_FILENAME:
 			case TRANSCRIPTION:
@@ -115,6 +119,7 @@ public class PointOfInterestTableModel
 		switch (Column.values () [columnIndex]) {
 			case ID:
 				return false;
+			case TITLE:
 			case LOCATION:
 			case HAS_IMAGE:
 			case AUDIO_FILENAME:
@@ -137,6 +142,13 @@ public class PointOfInterestTableModel
 		switch (Column.values () [columnIndex]) {
 			case ID:
 				return ;
+			case TITLE:
+				asString = (String) aValue;
+				if (asString.compareTo (aPointOfInterest.getTitle ()) != 0) {
+					aPointOfInterest.setTitle (asString);
+					updated = true;
+				}
+				break;
 			case LOCATION:
 				if (aPointOfInterest.getLocation () != (Location) aValue) {
 					aPointOfInterest.setLocation ((Location) aValue);

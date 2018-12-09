@@ -17,6 +17,7 @@ final public class PointOfInterest
 {
 	private final long ID;
 	private Location location;
+	private String title;
 	private String imageFilename;
 	private boolean hasImage;
 	private String audioFilename;
@@ -29,10 +30,11 @@ final public class PointOfInterest
 	 * @param audioFilename the audio with the description of the point of interest.
 	 * @param audioTranscription the audio transcription of the point of interest.
 	 */
-	private PointOfInterest (long ID, Location location, String imageFilename, String audioFilename, String audioTranscription)
+	private PointOfInterest (long ID, Location location, String title, String imageFilename, String audioFilename, String audioTranscription)
 	{
 		this.ID = ID;
 		this.location = location;
+		this.title = title;
 		this.imageFilename = imageFilename;
 		this.hasImage = imageFilename != null;
 		this.audioFilename = audioFilename;
@@ -47,10 +49,10 @@ final public class PointOfInterest
 	 * @param audioFilename the audio with the description of the point of interest.
 	 * @param audioTranscription the audio transcription of the point of interest.
 	 */
-	static PointOfInterest create (long ID, Location location, String imageFilename, String audioFilename, String audioTranscription)
+	static PointOfInterest create (long ID, Location location, String title, String imageFilename, String audioFilename, String audioTranscription)
 	{
 		PointOfInterest result = new PointOfInterest (
-		  ID, location, imageFilename, audioFilename, audioTranscription);
+		  ID, location, title, imageFilename, audioFilename, audioTranscription);
 		return result;
 	}
 
@@ -74,6 +76,22 @@ final public class PointOfInterest
 	public void setLocation (Location location)
 	{
 		this.location = location;
+	}
+
+	@Override
+	public String getTitle ()
+	{
+		return this.title;
+	}
+
+	/**
+	 * Set the title of this point of interest.
+	 *
+	 * @param title the new title of this point of interest.
+	 */
+	public void setTitle (String title)
+	{
+		this.title = title;
 	}
 
 	@Override
